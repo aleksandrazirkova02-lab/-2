@@ -1,0 +1,2698 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Студенческий ланчбокс — калькулятор КБЖУ и витаминов</title>
+    <style>
+        :root {
+            --green-900: #0b3d2e;
+            --green-800: #0f5132;
+            --green-700: #146c43;
+            --green-600: #1b7f4b;
+            --green-500: #2e9d63;
+            --green-200: #c9e6d4;
+            --green-100: #e8f5ee;
+            --green-50: #f3faf5;
+            --border: #cfe8d8;
+            --text: #173b2a;
+            --muted: #5f7a6b;
+            --white: #ffffff;
+            --danger: #b42318;
+            --danger-bg: #fef3f2;
+            --warn: #b54708;
+            --warn-bg: #fffaeb;
+            --ok: #067647;
+            --ok-bg: #ecfdf3;
+            --info: #175cd3;
+            --info-bg: #eff8ff;
+            --shadow: 0 10px 30px rgba(15, 81, 50, 0.10);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Inter", "Manrope", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--green-50);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Кнопка источников */
+        .sources-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--green-600);
+            color: var(--white);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(27, 127, 75, 0.3);
+            transition: background 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sources-btn:hover { background: var(--green-700); }
+        .sources-btn:active { transform: translateY(1px); }
+
+        /* Модальное окно */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 61, 46, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-content {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 650px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            position: relative;
+            border: 1px solid var(--border);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--green-50);
+            color: var(--green-800);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s;
+        }
+        .modal-close:hover {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+        .modal-content h2 {
+            color: var(--green-800);
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            padding-right: 30px;
+        }
+        .sources-list {
+            list-style: none;
+        }
+        .sources-list li {
+            margin-bottom: 20px;
+            padding-left: 30px;
+            position: relative;
+            background: var(--green-50);
+            padding: 16px 16px 16px 40px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--green-500);
+        }
+        .sources-list li::before {
+            content: '📚';
+            position: absolute;
+            left: 12px;
+            top: 16px;
+            font-size: 1.1rem;
+        }
+        .sources-list a {
+            color: var(--green-800);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            transition: color 0.2s;
+        }
+        .sources-list a:hover {
+            color: var(--green-600);
+            text-decoration: underline;
+        }
+        .sources-list .link-note {
+            display: block;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 34px 38px;
+            border: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 1.9rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--green-800);
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            margin-bottom: 28px;
+            font-size: 0.98rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: var(--green-100);
+            color: var(--green-800);
+            border: 1.5px solid var(--border);
+            padding: 12px 22px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover:not(:disabled) { background: var(--green-200); }
+        .tab-btn.active {
+            background: var(--green-600);
+            color: var(--white);
+            border-color: var(--green-600);
+        }
+        .tab-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px 25px;
+            margin-bottom: 25px;
+        }
+
+        .field label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            color: var(--green-900);
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            padding: 11px 13px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: var(--white);
+            color: var(--text);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .field input:focus,
+        .field select:focus {
+            outline: none;
+            border-color: var(--green-600);
+            box-shadow: 0 0 0 4px rgba(27, 127, 75, 0.12);
+        }
+
+        .btn {
+            background: var(--green-600);
+            color: var(--white);
+            border: none;
+            padding: 14px 30px;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            width: 100%;
+        }
+
+        .btn:hover { background: var(--green-700); }
+        .btn:active { transform: translateY(1px); }
+
+        .btn-small {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            border-radius: 8px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--green-700);
+            border: 1.5px solid var(--green-600);
+        }
+
+        .btn-outline:hover { background: var(--green-100); }
+
+        .result-card {
+            background: var(--green-50);
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--green-600);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 18px;
+        }
+
+        .result-card h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--green-800);
+            margin-bottom: 14px;
+        }
+
+        .bmi-inline-card {
+            background: var(--green-50);
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--green-600);
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin-bottom: 22px;
+        }
+
+        .bmi-inline-card h2 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--green-800);
+            margin-bottom: 12px;
+        }
+
+        .bmi-placeholder {
+            color: var(--muted);
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .bmi-display {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .bmi-value-box {
+            background: var(--white);
+            border: 2px solid var(--green-600);
+            border-radius: 14px;
+            padding: 14px 24px;
+            text-align: center;
+            flex: 0 0 auto;
+            min-width: 110px;
+        }
+
+        .bmi-value-box .bmi-number {
+            font-size: 2.1rem;
+            font-weight: 800;
+            color: var(--green-700);
+            line-height: 1;
+        }
+
+        .bmi-value-box .bmi-unit {
+            font-size: 0.75rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .bmi-info { flex: 1 1 260px; }
+
+        .bmi-category {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .bmi-ok { background: var(--ok-bg); color: var(--ok); }
+        .bmi-warn { background: var(--warn-bg); color: var(--warn); }
+        .bmi-danger { background: var(--danger-bg); color: var(--danger); }
+        .bmi-info-class { background: var(--info-bg); color: var(--info); }
+
+        .bmi-scale-wrapper { position: relative; margin-top: 10px; }
+
+        .bmi-range-bar {
+            display: flex;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .bmi-range-bar div { min-width: 0; }
+
+        .bmi-marker {
+            position: absolute;
+            top: -8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--white);
+            border: 3px solid var(--green-900);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: left 0.4s ease;
+            transform: translateX(-50%);
+        }
+
+        .bmi-range-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            font-size: 0.74rem;
+            color: var(--muted);
+            margin-top: 8px;
+        }
+
+        .bmi-range-legend span::before {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+
+        .bmi-range-legend .leg-under::before { background: #5ba9d9; }
+        .bmi-range-legend .leg-normal::before { background: var(--green-600); }
+        .bmi-range-legend .leg-over::before { background: #e6a23c; }
+        .bmi-range-legend .leg-obese::before { background: var(--danger); }
+
+        .macro-compare-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+        }
+
+        .macro-compare-item {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .macro-compare-item .title {
+            font-size: 0.75rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 700;
+        }
+
+        .macro-compare-item .values {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .macro-compare-item .fact {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--green-700);
+            line-height: 1.1;
+        }
+
+        .macro-compare-item .target {
+            font-size: 0.82rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .macro-compare-item .pct-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.78rem;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        .macro-compare-item .bar {
+            height: 8px;
+            background: var(--green-100);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 2px;
+        }
+
+        .macro-compare-item .bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .macro-compare-item.is-deficit .fact { color: var(--danger); }
+        .macro-compare-item.is-deficit .bar-fill { background: var(--danger); }
+        .macro-compare-item.is-deficit .pct-row .status { color: var(--danger); }
+
+        .macro-compare-item.is-ok .fact { color: var(--ok); }
+        .macro-compare-item.is-ok .bar-fill { background: var(--green-600); }
+        .macro-compare-item.is-ok .pct-row .status { color: var(--ok); }
+
+        .macro-compare-item.is-excess .fact { color: var(--warn); }
+        .macro-compare-item.is-excess .bar-fill { background: #e6a23c; }
+        .macro-compare-item.is-excess .pct-row .status { color: var(--warn); }
+
+        .vitamins-compare-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+        }
+
+        .vit-compare-item {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .vit-compare-item .vit-title {
+            font-size: 0.72rem;
+            color: var(--muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            line-height: 1.2;
+        }
+
+        .vit-compare-item .vit-values {
+            display: flex;
+            align-items: baseline;
+            gap: 3px;
+            flex-wrap: wrap;
+        }
+
+        .vit-compare-item .vit-fact {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--green-700);
+        }
+
+        .vit-compare-item .vit-target {
+            font-size: 0.68rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .vit-compare-item .vit-bar {
+            height: 5px;
+            background: var(--green-100);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .vit-compare-item .vit-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .vit-compare-item .vit-pct {
+            font-size: 0.72rem;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .vit-compare-item.is-deficit .vit-fact { color: var(--danger); }
+        .vit-compare-item.is-deficit .vit-bar-fill { background: var(--danger); }
+        .vit-compare-item.is-deficit .vit-pct { color: var(--danger); }
+
+        .vit-compare-item.is-ok .vit-fact { color: var(--ok); }
+        .vit-compare-item.is-ok .vit-bar-fill { background: var(--green-600); }
+        .vit-compare-item.is-ok .vit-pct { color: var(--ok); }
+
+        .vit-compare-item.is-excess .vit-fact { color: var(--warn); }
+        .vit-compare-item.is-excess .vit-bar-fill { background: #e6a23c; }
+        .vit-compare-item.is-excess .vit-pct { color: var(--warn); }
+
+        .rec-section {
+            margin-bottom: 22px;
+        }
+
+        .rec-section:last-child { margin-bottom: 0; }
+
+        .rec-section h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--green-800);
+            margin-bottom: 8px;
+        }
+
+        .rec-subtitle {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .recommendation {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            font-size: 0.92rem;
+        }
+
+        .rec-add { background: var(--ok-bg); border-left: 4px solid var(--ok); }
+        .rec-remove { background: var(--danger-bg); border-left: 4px solid var(--danger); }
+
+        .nutrition-table-wrap {
+            overflow-x: auto;
+            border-radius: 10px;
+            margin-bottom: 4px;
+        }
+
+        .nutrition-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.86rem;
+            background: var(--white);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .nutrition-table th {
+            background: var(--green-100);
+            font-weight: 700;
+            color: var(--green-800);
+            font-size: 0.74rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            padding: 9px 10px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .nutrition-table td {
+            padding: 9px 10px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .nutrition-table td.num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .nutrition-table td.food-cell {
+            font-weight: 700;
+            color: var(--green-900);
+        }
+
+        .nutrition-table td.for-cell {
+            font-size: 0.8rem;
+            color: var(--green-700);
+            font-weight: 600;
+        }
+
+        .nutrition-table td.bad-cell {
+            background: var(--danger-bg);
+            color: var(--danger);
+            font-weight: 700;
+            vertical-align: middle;
+            border-bottom: 2px solid var(--white);
+        }
+
+        .nutrition-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-note {
+            font-size: 0.72rem;
+            color: var(--muted);
+            font-style: italic;
+            margin-top: 4px;
+            margin-bottom: 10px;
+        }
+
+        .disclaimer {
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Категории */
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            margin-bottom: 10px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            scroll-behavior: smooth;
+        }
+        .category-tabs::-webkit-scrollbar { display: none; }
+
+        .cat-pill {
+            background: var(--white);
+            color: var(--green-800);
+            border: 1.5px solid var(--border);
+            padding: 9px 18px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+            flex-shrink: 0;
+        }
+
+        .cat-pill:hover {
+            border-color: var(--green-500);
+            background: var(--green-50);
+        }
+
+        .cat-pill.active {
+            background: var(--green-600);
+            color: var(--white);
+            border-color: var(--green-600);
+            box-shadow: 0 4px 12px rgba(27, 127, 75, 0.25);
+        }
+
+        .cat-pill .pill-check {
+            display: inline-block;
+            margin-left: 4px;
+            font-weight: 800;
+            color: #b8f0cd;
+        }
+
+        /* Подкатегории */
+        .subcategory-tabs {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            margin-bottom: 12px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            scroll-behavior: smooth;
+        }
+        .subcategory-tabs::-webkit-scrollbar { display: none; }
+
+        .subcat-pill {
+            background: var(--green-50);
+            color: var(--green-700);
+            border: 1.5px dashed var(--green-500);
+            padding: 5px 14px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .subcat-pill:hover {
+            background: var(--green-100);
+            border-style: solid;
+        }
+
+        .subcat-pill.active {
+            background: var(--green-700);
+            color: var(--white);
+            border-style: solid;
+            border-color: var(--green-700);
+        }
+
+        .category-heading {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--green-800);
+            letter-spacing: -0.01em;
+            margin: 4px 0 12px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 10px;
+            margin-bottom: 18px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .product-card {
+            background: var(--white);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 14px;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s, transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-card:hover {
+            border-color: var(--green-500);
+            box-shadow: 0 6px 20px rgba(15, 81, 50, 0.10);
+            transform: translateY(-2px);
+        }
+
+        .product-card.selected {
+            border-color: var(--green-500);
+            background: var(--green-50);
+            box-shadow: 0 0 0 3px rgba(46, 157, 99, 0.12);
+            transform: none;
+        }
+
+        .product-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--green-100);
+            color: var(--green-700);
+            border: 2px solid var(--green-500);
+            font-size: 1.3rem;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.1s;
+            padding: 0;
+            font-family: inherit;
+        }
+
+        .toggle-btn:hover {
+            background: var(--green-500);
+            color: var(--white);
+        }
+
+        .toggle-btn:active { transform: scale(0.92); }
+
+        .toggle-btn.active {
+            background: var(--green-600);
+            border-color: var(--green-600);
+            color: var(--white);
+        }
+
+        .product-info {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .product-name {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--green-900);
+            line-height: 1.3;
+        }
+
+        .product-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px 8px;
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        .product-meta span { white-space: nowrap; }
+        .product-meta b { color: var(--green-700); font-weight: 700; }
+
+        .percent-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px;
+            margin-top: 10px;
+            padding-left: 44px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .percent-row .percent-label {
+            font-size: 0.74rem;
+            color: var(--muted);
+            font-weight: 600;
+            margin-right: 2px;
+        }
+
+        .percent-pill {
+            background: var(--white);
+            color: var(--green-700);
+            border: 1.5px solid var(--border);
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .percent-pill:hover {
+            border-color: var(--green-500);
+            background: var(--green-50);
+        }
+
+        .percent-pill.active {
+            background: var(--green-600);
+            color: var(--white);
+            border-color: var(--green-600);
+        }
+
+        .grams-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            padding-left: 44px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .grams-row label {
+            font-size: 0.76rem;
+            color: var(--muted);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .grams-row input {
+            width: 68px;
+            padding: 5px 8px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            text-align: right;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .grams-row input:focus {
+            outline: none;
+            border-color: var(--green-600);
+            box-shadow: 0 0 0 3px rgba(27, 127, 75, 0.12);
+        }
+
+        .grams-row .unit {
+            font-size: 0.76rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .portion-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            padding-left: 44px;
+            font-size: 0.78rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .portion-row b {
+            color: var(--green-700);
+            font-weight: 800;
+        }
+
+        .quantity-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding-left: 44px;
+            font-size: 0.78rem;
+            color: var(--muted);
+            font-weight: 600;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .quantity-row .qty-label {
+            white-space: nowrap;
+        }
+
+        .qty-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1.5px solid var(--green-500);
+            background: var(--white);
+            color: var(--green-700);
+            font-size: 1rem;
+            font-weight: 800;
+            line-height: 1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-family: inherit;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .qty-btn:hover { background: var(--green-100); }
+        .qty-btn:active { transform: scale(0.92); }
+
+        .qty-value {
+            min-width: 24px;
+            text-align: center;
+            font-weight: 800;
+            color: var(--green-800);
+            font-size: 0.9rem;
+        }
+
+        .next-btn-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+            margin-bottom: 28px;
+        }
+
+        .next-category-btn {
+            background: var(--green-600);
+            color: var(--white);
+            border: none;
+            padding: 13px 28px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 14px rgba(27, 127, 75, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .next-category-btn:hover { background: var(--green-700); }
+        .next-category-btn:active { transform: translateY(1px); }
+
+        .next-category-btn.done {
+            background: var(--green-800);
+            box-shadow: 0 4px 14px rgba(11, 61, 46, 0.30);
+        }
+
+        .next-category-btn.done:hover { background: var(--green-900); }
+
+        .skip-to-results-btn {
+            background: transparent;
+            color: var(--green-700);
+            border: 1.5px solid var(--green-600);
+            padding: 11px 24px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .skip-to-results-btn:hover { background: var(--green-100); }
+        .skip-to-results-btn:active { transform: translateY(1px); }
+
+        .diary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1.02rem;
+            margin-bottom: 24px;
+            background: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(15, 81, 50, 0.06);
+        }
+
+        .diary-table th,
+        .diary-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .diary-table th {
+            background: var(--green-100);
+            font-weight: 800;
+            color: var(--green-800);
+            font-size: 0.92rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+        }
+
+        .diary-table tbody tr:hover { background: var(--green-50); }
+
+        .diary-table td.num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+        }
+
+        .diary-table td.product-cell {
+            font-weight: 700;
+            color: var(--green-900);
+            white-space: nowrap;
+        }
+
+        .diary-table .variant-suffix {
+            font-weight: 600;
+            color: var(--muted);
+            font-size: 0.86rem;
+            margin-left: 4px;
+        }
+
+        .delete-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--danger);
+            color: var(--white);
+            border: none;
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin-right: 10px;
+            vertical-align: middle;
+            transition: background 0.2s, transform 0.1s;
+            font-family: inherit;
+        }
+
+        .delete-btn:hover { background: #8f1c13; }
+        .delete-btn:active { transform: scale(0.9); }
+
+        .totals-row {
+            font-weight: 800;
+            background: var(--green-100);
+            font-size: 1.05rem;
+        }
+
+        .totals-row td {
+            padding: 16px;
+            border-bottom: none;
+            border-top: 2px solid var(--green-500);
+        }
+
+        .totals-row td.product-cell {
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--green-800);
+        }
+
+        .empty-message {
+            color: var(--muted);
+            font-style: italic;
+            padding: 15px 0;
+        }
+
+        .diary-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .summary-banner {
+            background: var(--green-100);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 22px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .summary-banner .emoji { font-size: 1.8rem; }
+        .summary-banner .text { font-size: 0.95rem; color: var(--green-900); }
+        .summary-banner .text b { color: var(--green-700); }
+
+        .section-divider {
+            margin: 28px 0 18px;
+            padding: 14px 22px;
+            background: linear-gradient(135deg, var(--green-100), var(--green-50));
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .section-divider h2 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--green-800);
+            margin-bottom: 2px;
+        }
+
+        .section-divider p {
+            font-size: 0.86rem;
+            color: var(--muted);
+        }
+
+        @media (max-width: 700px) {
+            .grid { grid-template-columns: 1fr; }
+            .container { padding: 22px; }
+            h1 { font-size: 1.55rem; }
+            .diary-table { font-size: 0.85rem; }
+            .diary-table th, .diary-table td { padding: 10px 8px; }
+            .products-grid { grid-template-columns: 1fr 1fr; }
+            .next-btn-wrapper { align-items: stretch; }
+            .next-category-btn,
+            .skip-to-results-btn { width: 100%; justify-content: center; }
+            .sources-btn { top: 10px; right: 10px; padding: 8px 14px; font-size: 0.85rem; }
+        }
+
+        @media (max-width: 480px) {
+            .products-grid { grid-template-columns: 1fr; }
+        }
+        
+        /* Новые стили для цветных плашек КБЖУ */
+        .macro-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+        }
+
+        .macro-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-kcal { background: var(--warn-bg); color: var(--warn); }
+        .badge-protein { background: var(--info-bg); color: var(--info); }
+        .badge-fat { background: var(--danger-bg); color: var(--danger); }
+        .badge-carbs { background: #f4f3ff; color: #5925dc; }
+            .qty-input {
+            width: 45px;
+            text-align: center;
+            font-weight: 800;
+            color: var(--green-800);
+            font-size: 0.9rem;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            padding: 4px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .qty-input:focus {
+            border-color: var(--green-600);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Кнопка и модальное окно источников -->
+<button class="sources-btn" onclick="toggleSourcesMenu()">
+    <span>📚</span> Источники
+</button>
+
+<div class="modal-overlay" id="sourcesModal" onclick="closeSourcesMenuOnOverlay(event)">
+    <div class="modal-content">
+        <button class="modal-close" onclick="toggleSourcesMenu()">&times;</button>
+        <h2>Источники данных и нормативов</h2>
+        <ul class="sources-list">
+                        <li>
+                <a href="https://moodle.kstu.ru/pluginfile.php/325296/mod_resource/content/0/Скурихин-chim_sostav.pdf" target="_blank" rel="noopener noreferrer">
+                    Химический состав российских пищевых продуктов: Справочник / Под ред. член-корр. МАИ, проф. И. М. Скурихина и академика РАМН, проф. В. А. Тутельяна. - Х46 М.: ДеЛи принт, 2002. - 236 с. ISBN 5-94343-028-8
+                </a>
+                <span class="link-note">Использован для данных о содержании нутриентов в продуктах (БЖУ, витамины, минералы).</span>
+            </li>
+                      <li>
+                <a href="https://www.garant.ru/products/ipo/prime/doc/402716140/" target="_blank" rel="noopener noreferrer">
+                    МР 2.3.1.0453-21 «Нормы физиологических потребностей в энергии и пищевых веществах для различных групп населения Российской Федерации»
+                </a>
+                <span class="link-note">Использован для расчёта суточных норм КБЖУ, витаминов и классификации ИМТ.</span>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div class="container">
+    <h1>🥗 Студенческий ланчбокс</h1>
+    <p class="subtitle">Расчёт калорий, БЖУ и витаминов с персональными рекомендациями по коррекции рациона</p>
+
+    <div class="tabs">
+        <button class="tab-btn active" id="tab1Btn" onclick="switchTab(1)">1. Персональные данные</button>
+        <button class="tab-btn" id="tab2Btn" onclick="switchTab(2)" disabled>2. Выбор продуктов</button>
+        <button class="tab-btn" id="tab3Btn" onclick="switchTab(3)" disabled>3. Ваш дневник</button>
+    </div>
+
+    <div id="tab1" class="tab-content active">
+        <div class="grid">
+            <div class="field">
+                <label for="gender">Пол</label>
+                <select id="gender">
+                    <option value="male">Мужчина</option>
+                    <option value="female">Женщина</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="age">Возраст (лет)</label>
+                <input type="number" id="age" min="18" max="100" value="30">
+            </div>
+            <div class="field">
+                <label for="height">Рост (см)</label>
+                <input type="number" id="height" min="140" max="220" value="175">
+            </div>
+            <div class="field">
+                <label for="weight">Вес (кг)</label>
+                <input type="number" id="weight" min="40" max="180" value="70">
+            </div>
+            <div class="field" style="grid-column: 1 / -1;">
+                <label for="activity">Уровень физической активности (КФА)</label>
+                <select id="activity">
+                    <option value="1.4">Минимальный (КФА 1.4) — работники преимущественно умственного труда (сидячий образ жизни)</option>
+                    <option value="1.6" selected>Низкий (КФА 1.6) — работники, занятые легким трудом</option>
+                    <option value="1.9">Средний (КФА 1.9) — работники средней тяжести труда</option>
+                    <option value="2.2">Высокий (КФА 2.2) — работники тяжелого физического труда</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="bmi-inline-card" id="bmiInlineCard">
+            <h2>⚖️ Индекс массы тела (ИМТ)</h2>
+            <p class="bmi-placeholder">Введите корректные рост (140–220 см) и вес (40–180 кг), чтобы увидеть ИМТ.</p>
+        </div>
+
+        <button class="btn" onclick="calculate()">Рассчитать и перейти к выбору продуктов</button>
+    </div>
+
+    <div id="tab2" class="tab-content">
+        <p style="margin-bottom: 18px; color: var(--muted); font-size: 0.92rem;">
+            Нажмите круглую кнопку «+» у продукта — он добавится в дневник. Для «Готовых блюд» доступны подкатегории
+            (Холодные закуски, Первые блюда, Вторые блюда). Кнопка «Далее» переключает категорию, а «Перейти к результатам» —
+            сразу открывает дневник питания.
+        </p>
+
+        <h2 style="font-size: 1.1rem; color: var(--green-800); margin-bottom: 14px;">🍽 Выбор продуктов</h2>
+
+        <div class="category-tabs" id="categoryTabs"></div>
+        <h3 class="category-heading" id="categoryHeading"></h3>
+        <div class="subcategory-tabs" id="subcategoryTabs" style="display:none;"></div>
+        <div class="products-grid" id="productsGrid"></div>
+        <div class="next-btn-wrapper" id="nextBtnWrapper"></div>
+    </div>
+
+    <div id="tab3" class="tab-content">
+        <div id="diaryContent">
+            <div class="summary-banner" id="summaryBanner">
+                <span class="emoji">📋</span>
+                <div class="text" id="summaryText">Здесь появятся итоги вашего дневника питания.</div>
+            </div>
+
+            <div id="diaryTableContainer">
+                <p class="empty-message">Вы пока не добавили ни одного продукта. Вернитесь к выбору продуктов.</p>
+            </div>
+
+            <div id="diarySummary" style="display: none;">
+                <div class="result-card">
+                    <h2>📊 Итого и суточная норма калорий и БЖУ</h2>
+                    <div id="diaryTotals"></div>
+                </div>
+
+                <div class="result-card">
+                    <h2>💊 Витамины и минералы: получено из пищи и суточная норма</h2>
+                    <div class="vitamins-compare-grid" id="vitaminsCompare"></div>
+                </div>
+
+                <div class="section-divider">
+                    <h2>💡 Рекомендации по коррекции рациона</h2>
+                    <p>На основе анализа вашего фактического рациона</p>
+                </div>
+
+                <div class="result-card">
+                    <div id="combinedRecommendations"></div>
+                </div>
+
+                <p class="disclaimer">
+                    ⚕️ Приложение носит информационный характер и не заменяет консультацию врача или нутрициолога.
+                    Нормы витаминов и энергии рассчитаны согласно МР 2.3.1.0453-21 для взрослого населения (18 лет и старше).
+                    Данные о содержании нутриентов в продуктах соответствуют справочнику И.М. Скурихина,
+                    В.А. Тутельяна «Химический состав российских пищевых продуктов» (2002).
+                    Данные о готовых блюдах — приблизительные оценки по типовым рецептурам.
+                </p>
+            </div>
+
+            <div class="diary-actions">
+                <button class="btn btn-small btn-outline" onclick="switchTab(2)">← Вернуться к выбору продуктов</button>
+                <button class="btn btn-small btn-outline" onclick="clearDiary()">Очистить дневник</button>
+                <button class="btn btn-small btn-outline" onclick="switchTab(1)">← К персональным данным</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Логика модального окна источников
+    function toggleSourcesMenu() {
+        const modal = document.getElementById('sourcesModal');
+        if (modal.classList.contains('active')) {
+            modal.classList.remove('active');
+        } else {
+            modal.classList.add('active');
+        }
+    }
+
+    function closeSourcesMenuOnOverlay(event) {
+        if (event.target.id === 'sourcesModal') {
+            toggleSourcesMenu();
+        }
+    }
+
+    const VITAMIN_NORMS = {
+        'Витамин C':        { male: 100,  female: 100,  unit: 'мг' },
+        'Витамин B1':       { male: 1.5,  female: 1.5,  unit: 'мг' },
+        'Витамин B2':       { male: 1.8,  female: 1.8,  unit: 'мг' },
+        'Витамин B6':       { male: 2.0,  female: 2.0,  unit: 'мг' },
+        'Витамин B12':      { male: 0.003,female: 0.003,unit: 'мг' },
+        'Фолаты (B9)':      { male: 0.4,  female: 0.4,  unit: 'мг' },
+        'Витамин A':        { male: 0.9,  female: 0.8,  unit: 'мг рет. экв.' },
+        'Витамин E':        { male: 15,   female: 15,   unit: 'мг ток. экв.' },
+        'Витамин D':        { male: 0.015,female: 0.015,unit: 'мг' },
+        'Кальций':          { male: 1000, female: 1000, unit: 'мг' },
+        'Магний':           { male: 420,  female: 420,  unit: 'мг' },
+        'Железо':           { male: 10,   female: 18,   unit: 'мг' },
+        'Йод':              { male: 0.15, female: 0.15, unit: 'мг' }
+    };
+
+    const FOODS = [
+        // ===================== Готовые блюда =====================
+        // ХОЛОДНЫЕ ЗАКУСКИ
+        { name: 'Яйцо куриное вкрутую (1 шт)', category: 'Готовые блюда', subcategory: 'Холодные закуски', fixedPortion: true, hasQuantity: true, pieceGrams: 50, defaultQuantity: 1, kcal: 160, protein: 12.9, fat: 11.6, carbs: 0.8, vitC: 0, vitB1: 0.07, vitB2: 0.5, vitB6: 0.1, vitB12: 0.0009, folate: 0.047, vitA: 0.14, vitE: 1.1, vitD: 0.002, calcium: 50, magnesium: 12, iron: 1.2, iodine: 0.02 },
+        { name: 'Крабовый салат', category: 'Готовые блюда', subcategory: 'Холодные закуски', fixedPortion: true, hasQuantity: true, pieceGrams: 100, defaultQuantity: 1, kcal: 180, protein: 5, fat: 15, carbs: 7, vitC: 3, vitB1: 0.03, vitB2: 0.08, vitB6: 0.05, vitB12: 0.0003, folate: 0.01, vitA: 0.05, vitE: 1.5, vitD: 0.0003, calcium: 25, magnesium: 15, iron: 0.6, iodine: 0.005 },
+        { name: 'Курица с ананасом', category: 'Готовые блюда', subcategory: 'Холодные закуски', fixedPortion: true, hasQuantity: true, pieceGrams: 100, defaultQuantity: 1, kcal: 149.5, protein: 17.1, fat: 7.7, carbs: 2.9, vitC: 5, vitB1: 0.05, vitB2: 0.08, vitB6: 0.3, vitB12: 0.0003, folate: 0.01, vitA: 0.01, vitE: 0.3, vitD: 0.0001, calcium: 15, magnesium: 25, iron: 1, iodine: 0.005 },
+        { name: 'Оливье с колбасой вареной', category: 'Готовые блюда', subcategory: 'Холодные закуски', fixedPortion: true, hasQuantity: true, pieceGrams: 100, defaultQuantity: 1, kcal: 115, protein: 4.6, fat: 8.0, carbs: 5.9, vitC: 3, vitB1: 0.05, vitB2: 0.05, vitB6: 0.1, vitB12: 0.0001, folate: 0.01, vitA: 0.1, vitE: 0.8, vitD: 0, calcium: 20, magnesium: 15, iron: 0.8, iodine: 0.002 },
+        { name: 'Салат из огурцов и помидоров', category: 'Готовые блюда', subcategory: 'Холодные закуски', fixedPortion: true, hasQuantity: true, pieceGrams: 100, defaultQuantity: 1, kcal: 89.7, protein: 0.8, fat: 8.0, carbs: 4.1, vitC: 12, vitB1: 0.03, vitB2: 0.04, vitB6: 0.1, vitB12: 0, folate: 0.01, vitA: 0.02, vitE: 0.7, vitD: 0, calcium: 15, magnesium: 15, iron: 0.8, iodine: 0.002 },
+
+// ===================== Гарниры =====================
+{ name: 'Макароны (отварные)', category: 'Гарниры', kcal: 131, protein: 5, fat: 1, carbs: 25, vitC: 0, vitB1: 0.05, vitB2: 0.02, vitB6: 0.03, vitB12: 0, folate: 0.005, vitA: 0, vitE: 0.2, vitD: 0, calcium: 10, magnesium: 15, iron: 0.5, iodine: 0.002 },
+{ name: 'Картофель (отварной)', category: 'Гарниры', kcal: 87, protein: 2, fat: 0.1, carbs: 20, vitC: 10, vitB1: 0.08, vitB2: 0.03, vitB6: 0.2, vitB12: 0, folate: 0.01, vitA: 0, vitE: 0.1, vitD: 0, calcium: 8, magnesium: 20, iron: 0.5, iodine: 0.001 },
+{ name: 'Картофельное пюре', category: 'Гарниры', kcal: 85, protein: 2, fat: 2, carbs: 15, vitC: 8, vitB1: 0.06, vitB2: 0.03, vitB6: 0.15, vitB12: 0, folate: 0.008, vitA: 0.01, vitE: 0.1, vitD: 0, calcium: 15, magnesium: 15, iron: 0.4, iodine: 0.001 },
+{ name: 'Картофель (жареный)', category: 'Гарниры', kcal: 275, protein: 3.8, fat: 15.5, carbs: 30.1, vitC: 5, vitB1: 0.08, vitB2: 0.03, vitB6: 0.2, vitB12: 0, folate: 0.01, vitA: 0, vitE: 0.3, vitD: 0, calcium: 8, magnesium: 20, iron: 0.5, iodine: 0.001 },
+{ name: 'Гречка (отварная)', category: 'Гарниры', kcal: 110, protein: 4, fat: 1, carbs: 21, vitC: 0, vitB1: 0.1, vitB2: 0.05, vitB6: 0.1, vitB12: 0, folate: 0.01, vitA: 0, vitE: 0.5, vitD: 0, calcium: 10, magnesium: 50, iron: 0.8, iodine: 0.002 },
+{ name: 'Рис (отварной)', category: 'Гарниры', kcal: 130, protein: 2.7, fat: 0.3, carbs: 28, vitC: 0, vitB1: 0.02, vitB2: 0.01, vitB6: 0.05, vitB12: 0, folate: 0.002, vitA: 0, vitE: 0.1, vitD: 0, calcium: 10, magnesium: 12, iron: 0.2, iodine: 0.001 },
+
+                // ===================== Каши =====================
+        { name: 'Овсянка (варёная на воде)', category: 'Каши', kcal: 88, protein: 3, fat: 1.7, carbs: 15, vitC: 0, vitB1: 0.1, vitB2: 0.02, vitB6: 0.05, vitB12: 0, folate: 0.006, vitA: 0, vitE: 0.3, vitD: 0, calcium: 10, magnesium: 30, iron: 0.8, iodine: 0.002 },
+        { name: 'Манная каша (варёная)', category: 'Каши', kcal: 100, protein: 2.2, fat: 2.9, carbs: 16.4, vitC: 0, vitB1: 0.05, vitB2: 0.02, vitB6: 0.03, vitB12: 0, folate: 0.003, vitA: 0, vitE: 0.1, vitD: 0, calcium: 20, magnesium: 8, iron: 0.5, iodine: 0.001 },
+
+// ===================== Напитки =====================
+{ name: 'Чай с сахаром (1 стаканчик)', category: 'Напитки', hasQuantity: true, pieceGrams: 200, defaultQuantity: 1, kcal: 28.4, protein: 0.1, fat: 0, carbs: 7.0, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 1, iron: 0, iodine: 0 },
+{ name: 'Чай чёрный без сахара', category: 'Напитки', hasQuantity: true, pieceGrams: 200, defaultQuantity: 1, kcal: 0, protein: 0.1, fat: 0, carbs: 0, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+{ name: 'Чай с лимоном', category: 'Напитки', hasQuantity: true, pieceGrams: 200, defaultQuantity: 1, kcal: 28, protein: 0.1, fat: 0, carbs: 6.8, vitC: 1, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 2, magnesium: 1, iron: 0.1, iodine: 0 },
+{ name: 'Чай с молоком', category: 'Напитки', hasQuantity: true, pieceGrams: 200, defaultQuantity: 1, kcal: 43, protein: 0.7, fat: 0.8, carbs: 8.2, vitC: 0.2, vitB1: 0.01, vitB2: 0.02, vitB6: 0.01, vitB12: 0.0001, folate: 0.001, vitA: 0.01, vitE: 0.1, vitD: 0, calcium: 20, magnesium: 2, iron: 0.1, iodine: 0.001 },
+{ name: 'Кофе «Нескафе 3в1 Классик» (1 стаканчик)', category: 'Напитки', hasQuantity: true, pieceGrams: 200, defaultQuantity: 1, kcal: 32, protein: 0.1, fat: 0.9, carbs: 5.5, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+{ name: 'Чай каркаде без сахара (1 стаканчик)', category: 'Напитки', hasQuantity: true, pieceGrams: 200, defaultQuantity: 1, kcal: 5, protein: 0.3, fat: 0, carbs: 0.6, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+{ name: 'Чай с сахаром (1 стаканчик)', category: 'Напитки', hasQuantity: true, pieceGrams: 200, defaultQuantity: 1, kcal: 28, protein: 0.1, fat: 0, carbs: 7.0, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },{ name: 'Компот из сухофруктов без сахара (1 чашка)', category: 'Напитки', hasQuantity: true, pieceGrams: 200, defaultQuantity: 1, kcal: 60, protein: 0.8, fat: 0, carbs: 14.2, vitC: 1, vitB1: 0.01, vitB2: 0.01, vitB6: 0.05, vitB12: 0, folate: 0.002, vitA: 0.01, vitE: 0.1, vitD: 0, calcium: 10, magnesium: 10, iron: 0.3, iodine: 0.001 },
+
+       // ===================== Еда из продуктового магазина =====================
+
+// --- Снеки и чипсы ---
+{ name: 'Чипсы Lays', category: 'Еда из продуктового магазина', subcategory: 'Снеки и чипсы', kcal: 530, protein: 6.5, fat: 34, carbs: 51, vitC: 10, vitB1: 0.1, vitB2: 0.05, vitB6: 0.2, vitB12: 0, folate: 0.02, vitA: 0.01, vitE: 2, vitD: 0, calcium: 20, magnesium: 30, iron: 0.8, iodine: 0.002 },
+{ name: 'Картофельные палочки', category: 'Еда из продуктового магазина', subcategory: 'Снеки и чипсы', kcal: 522, protein: 6.7, fat: 34.4, carbs: 49.9, vitC: 5, vitB1: 0.1, vitB2: 0.05, vitB6: 0.2, vitB12: 0, folate: 0.01, vitA: 0, vitE: 2, vitD: 0, calcium: 20, magnesium: 25, iron: 0.8, iodine: 0.002 },
+{ name: 'Сухарики «Хрустим»', category: 'Еда из продуктового магазина', subcategory: 'Снеки и чипсы', kcal: 378, protein: 7, fat: 12, carbs: 60, vitC: 0, vitB1: 0.1, vitB2: 0.05, vitB6: 0.1, vitB12: 0, folate: 0.02, vitA: 0, vitE: 0.5, vitD: 0, calcium: 20, magnesium: 20, iron: 1, iodine: 0.003 },
+{ name: 'Сухарики «Кириешки»', category: 'Еда из продуктового магазина', subcategory: 'Снеки и чипсы', kcal: 400, protein: 8, fat: 15, carbs: 58, vitC: 0, vitB1: 0.1, vitB2: 0.05, vitB6: 0.1, vitB12: 0, folate: 0.02, vitA: 0, vitE: 0.5, vitD: 0, calcium: 20, magnesium: 20, iron: 1, iodine: 0.003 },
+{ name: 'Попкорн', category: 'Еда из продуктового магазина', subcategory: 'Снеки и чипсы', kcal: 500, protein: 7, fat: 30, carbs: 50, vitC: 0, vitB1: 0.1, vitB2: 0.05, vitB6: 0.1, vitB12: 0, folate: 0.01, vitA: 0.02, vitE: 1, vitD: 0, calcium: 10, magnesium: 30, iron: 1, iodine: 0.002 },
+
+// --- Сладости и выпечка ---
+{ name: 'Шоколадный батончик Snickers', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', kcal: 482, protein: 1, fat: 23, carbs: 64, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 50, magnesium: 30, iron: 0.8, iodine: 0.003 },
+{ name: 'Шоколадный батончик Babyfox', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', kcal: 500, protein: 6.7, fat: 30, carbs: 50, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 50, magnesium: 30, iron: 0.8, iodine: 0.003 },
+{ name: 'Батончик M&M\'s', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', kcal: 415, protein: 3.8, fat: 12, carbs: 70.6, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 50, magnesium: 20, iron: 0.8, iodine: 0.003 },
+{ name: 'Печенье Tuc', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', kcal: 483, protein: 8, fat: 22, carbs: 62, vitC: 0, vitB1: 0.1, vitB2: 0.08, vitB6: 0.05, vitB12: 0, folate: 0.02, vitA: 0.02, vitE: 1, vitD: 0, calcium: 40, magnesium: 20, iron: 1.5, iodine: 0.004 },
+{ name: 'Шоколадная паста с палочками (Frutella)', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', kcal: 500, protein: 7.7, fat: 28.8, carbs: 53.8, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 1, vitD: 0, calcium: 100, magnesium: 40, iron: 2, iodine: 0.005 },
+{ name: 'Мороженое шоколадное', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', kcal: 250, protein: 4, fat: 15, carbs: 25, vitC: 0.5, vitB1: 0.03, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0003, folate: 0.005, vitA: 0.08, vitE: 0.4, vitD: 0.0002, calcium: 100, magnesium: 15, iron: 0.5, iodine: 0.005 },
+{ name: 'Вафли с шоколадом', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', kcal: 520, protein: 5, fat: 30, carbs: 60, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 1, vitD: 0, calcium: 40, magnesium: 20, iron: 1, iodine: 0.003 },
+{ name: 'Пончик', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', kcal: 450, protein: 5, fat: 25, carbs: 50, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 1, vitD: 0, calcium: 40, magnesium: 15, iron: 1, iodine: 0.003 },
+{ name: 'Круассан с шоколадом', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', kcal: 450, protein: 7, fat: 25, carbs: 50, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.05, vitE: 1, vitD: 0.0001, calcium: 40, magnesium: 15, iron: 1.5, iodine: 0.004 },
+{ name: 'Шоколадный батончик Twix', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', hasQuantity: true, pieceGrams: 55, defaultQuantity: 1, kcal: 495, protein: 0, fat: 22, carbs: 47, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 50, magnesium: 20, iron: 0.8, iodine: 0.003 },
+{ name: 'Шоколадный батончик Bounty', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', hasQuantity: true, pieceGrams: 55, defaultQuantity: 1, kcal: 484, protein: 0, fat: 25, carbs: 51, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 50, magnesium: 20, iron: 0.8, iodine: 0.003 },
+{ name: 'Шоколадный батончик Picnic', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', hasQuantity: true, pieceGrams: 38, defaultQuantity: 1, kcal: 482, protein: 0, fat: 24, carbs: 58, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 50, magnesium: 20, iron: 0.8, iodine: 0.003 },
+{ name: 'Шоколадный батончик Nuts', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', hasQuantity: true, pieceGrams: 50, defaultQuantity: 1, kcal: 482, protein: 2, fat: 22, carbs: 66, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 50, magnesium: 20, iron: 0.8, iodine: 0.003 },
+{ name: 'Шоколадный батончик MilkyWay', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', hasQuantity: true, pieceGrams: 26, defaultQuantity: 1, kcal: 450, protein: 0, fat: 15, carbs: 65, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 50, magnesium: 20, iron: 0.8, iodine: 0.003 },
+{ name: 'Шоколадный батончик Mars', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', hasQuantity: true, pieceGrams: 50, defaultQuantity: 1, kcal: 458, protein: 0, fat: 18, carbs: 60, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 50, magnesium: 20, iron: 0.8, iodine: 0.003 },
+{ name: 'Драже M&M\'s (1 пачка)', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', hasQuantity: true, pieceGrams: 45, defaultQuantity: 1, kcal: 478, protein: 0, fat: 18, carbs: 67, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 50, magnesium: 20, iron: 0.8, iodine: 0.003 },
+{ name: 'Драже Skittles (1 пачка)', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', hasQuantity: true, pieceGrams: 38, defaultQuantity: 1, kcal: 411, protein: 0, fat: 4.2, carbs: 89.2, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+{ name: 'Шоколад Milka (1 плитка)', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', hasQuantity: true, pieceGrams: 80, defaultQuantity: 1, kcal: 534, protein: 5.8, fat: 30, carbs: 59, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 50, magnesium: 20, iron: 0.8, iodine: 0.003 },
+{ name: 'Шоколад Alpen Gold (1 плитка)', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', hasQuantity: true, pieceGrams: 80, defaultQuantity: 1, kcal: 531, protein: 6, fat: 30, carbs: 58, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 50, magnesium: 20, iron: 0.8, iodine: 0.003 },
+{ name: 'Шоколад Воздушный (1 плитка)', category: 'Еда из продуктового магазина', subcategory: 'Сладости и выпечка', hasQuantity: true, pieceGrams: 80, defaultQuantity: 1, kcal: 523, protein: 5, fat: 27, carbs: 62, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0001, folate: 0.01, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 50, magnesium: 20, iron: 0.8, iodine: 0.003 },
+
+// --- Еда быстрого приготовления ---
+{ name: 'Лапша Роллтон (курица, 1 пачка)', category: 'Еда из продуктового магазина', subcategory: 'Еда быстрого приготовления', hasQuantity: true, pieceGrams: 70, defaultQuantity: 1, kcal: 390, protein: 7.1, fat: 15.7, carbs: 55.7, vitC: 0, vitB1: 0.1, vitB2: 0.1, vitB6: 0.1, vitB12: 0, folate: 0.01, vitA: 0, vitE: 1, vitD: 0, calcium: 20, magnesium: 20, iron: 2, iodine: 0.003 },
+{ name: 'Лапша Доширак (курица, 1 пачка)', category: 'Еда из продуктового магазина', subcategory: 'Еда быстрого приготовления', hasQuantity: true, pieceGrams: 90, defaultQuantity: 1, kcal: 460, protein: 8.9, fat: 18.9, carbs: 62.2, vitC: 0, vitB1: 0.1, vitB2: 0.1, vitB6: 0.1, vitB12: 0, folate: 0.01, vitA: 0, vitE: 1, vitD: 0, calcium: 20, magnesium: 20, iron: 2, iodine: 0.003 },
+{ name: 'Пюре картофельное с сухариками (1 пачка)', category: 'Еда из продуктового магазина', subcategory: 'Еда быстрого приготовления', hasQuantity: true, pieceGrams: 40, defaultQuantity: 1, kcal: 370, protein: 7.5, fat: 7.5, carbs: 67.5, vitC: 2, vitB1: 0.05, vitB2: 0.05, vitB6: 0.1, vitB12: 0, folate: 0.01, vitA: 0.01, vitE: 0.5, vitD: 0, calcium: 20, magnesium: 15, iron: 1, iodine: 0.002 },
+{ name: 'Лапша Buldak Carbonara (1 пачка)', category: 'Еда из продуктового магазина', subcategory: 'Еда быстрого приготовления', hasQuantity: true, pieceGrams: 130, defaultQuantity: 1, kcal: 403, protein: 6.2, fat: 13.8, carbs: 62.3, vitC: 0, vitB1: 0.1, vitB2: 0.15, vitB6: 0.1, vitB12: 0, folate: 0.01, vitA: 0.01, vitE: 1, vitD: 0, calcium: 30, magnesium: 20, iron: 2, iodine: 0.003 },
+
+// --- Напитки ---
+{ name: 'Coca-Cola Zero (1 бутылка)', category: 'Еда из продуктового магазина', subcategory: 'Напитки', hasQuantity: true, pieceGrams: 500, defaultQuantity: 1, kcal: 0.2, protein: 0, fat: 0, carbs: 0, vitC: 0, vitB1: 0.005, vitB2: 0.023, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 3, magnesium: 1, iron: 0.11, iodine: 0 },
+{ name: 'Энергетик (Burn)', category: 'Еда из продуктового магазина', subcategory: 'Напитки', kcal: 16, protein: 0, fat: 0, carbs: 4.1, vitC: 0, vitB1: 0, vitB2: 0.1, vitB6: 0.1, vitB12: 0.0001, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 5, iron: 0, iodine: 0 },
+{ name: 'Coca-Cola (1 бутылка)', category: 'Еда из продуктового магазина', subcategory: 'Напитки', hasQuantity: true, pieceGrams: 500, defaultQuantity: 1, kcal: 43, protein: 0, fat: 0, carbs: 11, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 2, magnesium: 1, iron: 0, iodine: 0 },
+{ name: 'Pepsi (1 бутылка)', category: 'Еда из продуктового магазина', subcategory: 'Напитки', hasQuantity: true, pieceGrams: 500, defaultQuantity: 1, kcal: 29, protein: 0, fat: 0, carbs: 7, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+{ name: 'Sprite (1 бутылка)', category: 'Еда из продуктового магазина', subcategory: 'Напитки', hasQuantity: true, pieceGrams: 500, defaultQuantity: 1, kcal: 36, protein: 0, fat: 0, carbs: 8.6, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+{ name: 'Fanta (1 бутылка)', category: 'Еда из продуктового магазина', subcategory: 'Напитки', hasQuantity: true, pieceGrams: 500, defaultQuantity: 1, kcal: 36, protein: 0, fat: 0, carbs: 4.6, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+{ name: 'Сок Pulpy (1 шт)', category: 'Еда из продуктового магазина', subcategory: 'Напитки', hasQuantity: true, pieceGrams: 450, defaultQuantity: 1, kcal: 46, protein: 0, fat: 0, carbs: 11.6, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+{ name: 'Чёрный чай Липтон (1 шт)', category: 'Еда из продуктового магазина', subcategory: 'Напитки', hasQuantity: true, pieceGrams: 500, defaultQuantity: 1, kcal: 21, protein: 0, fat: 0, carbs: 5.0, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+{ name: 'Сок Любимый (1 шт)', category: 'Еда из продуктового магазина', subcategory: 'Напитки', hasQuantity: true, pieceGrams: 950, defaultQuantity: 1, kcal: 50, protein: 0, fat: 0, carbs: 12.0, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+
+// --- Соусы ---
+{ name: 'Кетчуп', category: 'Еда из продуктового магазина', subcategory: 'Соусы', kcal: 112, protein: 1.7, fat: 0.1, carbs: 26.5, vitC: 5, vitB1: 0.02, vitB2: 0.02, vitB6: 0.05, vitB12: 0, folate: 0.005, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 15, magnesium: 10, iron: 0.5, iodine: 0.001 },
+{ name: 'Майонез Calve Классический 50%', category: 'Еда из продуктового магазина', subcategory: 'Соусы', kcal: 470, protein: 0.4, fat: 50, carbs: 5.1, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0.02, vitE: 15, vitD: 0, calcium: 20, magnesium: 5, iron: 0.5, iodine: 0 },
+{ name: 'Майонез Calve Легкий 20%', category: 'Еда из продуктового магазина', subcategory: 'Соусы', kcal: 210, protein: 0.5, fat: 20, carbs: 7, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0.01, vitE: 5, vitD: 0, calcium: 10, magnesium: 2, iron: 0.2, iodine: 0 },
+{ name: 'Майонез Провансаль', category: 'Еда из продуктового магазина', subcategory: 'Соусы', kcal: 461, protein: 0, fat: 50, carbs: 2, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0.01, vitE: 10, vitD: 0, calcium: 10, magnesium: 2, iron: 0.2, iodine: 0 },
+
+// --- Колбасные изделия ---
+{ name: 'Сосиски молочные', category: 'Еда из продуктового магазина', subcategory: 'Колбасные изделия', kcal: 266, protein: 11, fat: 23.9, carbs: 1.6, vitC: 0, vitB1: 0.1, vitB2: 0.1, vitB6: 0.15, vitB12: 0.0005, folate: 0.005, vitA: 0, vitE: 0.3, vitD: 0.0002, calcium: 30, magnesium: 15, iron: 1.5, iodine: 0.004 },
+{ name: 'Колбаса варёная', category: 'Еда из продуктового магазина', subcategory: 'Колбасные изделия', kcal: 257, protein: 12.8, fat: 22.2, carbs: 1.5, vitC: 0, vitB1: 0.1, vitB2: 0.1, vitB6: 0.15, vitB12: 0.0005, folate: 0.005, vitA: 0, vitE: 0.3, vitD: 0.0002, calcium: 30, magnesium: 15, iron: 1.5, iodine: 0.004 },
+{ name: 'Колбаса Докторская', category: 'Еда из продуктового магазина', subcategory: 'Колбасные изделия', kcal: 257, protein: 12.8, fat: 22.2, carbs: 1.5, vitC: 0, vitB1: 0.1, vitB2: 0.1, vitB6: 0.15, vitB12: 0.0005, folate: 0.005, vitA: 0, vitE: 0.3, vitD: 0.0002, calcium: 30, magnesium: 15, iron: 1.5, iodine: 0.004 },
+{ name: 'Колбаса Салями', category: 'Еда из продуктового магазина', subcategory: 'Колбасные изделия', kcal: 450, protein: 21, fat: 40, carbs: 1, vitC: 0, vitB1: 0.1, vitB2: 0.1, vitB6: 0.2, vitB12: 0.001, folate: 0.005, vitA: 0, vitE: 0.5, vitD: 0.0003, calcium: 20, magnesium: 20, iron: 2, iodine: 0.005 },
+{ name: 'Колбаса Сервелат', category: 'Еда из продуктового магазина', subcategory: 'Колбасные изделия', kcal: 400, protein: 20, fat: 35, carbs: 1, vitC: 0, vitB1: 0.1, vitB2: 0.1, vitB6: 0.15, vitB12: 0.0008, folate: 0.005, vitA: 0, vitE: 0.4, vitD: 0.0002, calcium: 25, magnesium: 18, iron: 1.8, iodine: 0.004 },
+{ name: 'Сардельки говяжьи', category: 'Еда из продуктового магазина', subcategory: 'Колбасные изделия', kcal: 240, protein: 11.5, fat: 21, carbs: 1.5, vitC: 0, vitB1: 0.1, vitB2: 0.1, vitB6: 0.15, vitB12: 0.0005, folate: 0.005, vitA: 0, vitE: 0.3, vitD: 0.0002, calcium: 25, magnesium: 15, iron: 1.4, iodine: 0.004 },
+
+// ===================== Мучные изделия =====================
+{ name: 'Хлеб белый', category: 'Мучные изделия', hasQuantity: true, pieceGrams: 30, defaultQuantity: 1, kcal: 267, protein: 8.0, fat: 1.0, carbs: 50.0, vitC: 0, vitB1: 0.1, vitB2: 0.06, vitB6: 0.1, vitB12: 0, folate: 0.02, vitA: 0, vitE: 0.5, vitD: 0, calcium: 20, magnesium: 20, iron: 1.0, iodine: 0.003 },
+{ name: 'Батон нарезной', category: 'Мучные изделия', hasQuantity: true, pieceGrams: 25, defaultQuantity: 1, kcal: 264, protein: 7.5, fat: 3.3, carbs: 51.0, vitC: 0, vitB1: 0.1, vitB2: 0.05, vitB6: 0.08, vitB12: 0, folate: 0.02, vitA: 0, vitE: 0.5, vitD: 0, calcium: 20, magnesium: 15, iron: 1.0, iodine: 0.003 },
+{ name: 'Хлеб чёрный', category: 'Мучные изделия', hasQuantity: true, pieceGrams: 35, defaultQuantity: 1, kcal: 174, protein: 6.6, fat: 1.2, carbs: 34.0, vitC: 0, vitB1: 0.18, vitB2: 0.08, vitB6: 0.15, vitB12: 0, folate: 0.03, vitA: 0, vitE: 1.0, vitD: 0, calcium: 30, magnesium: 40, iron: 3.0, iodine: 0.002 },
+{ name: 'Хлеб серый', category: 'Мучные изделия', hasQuantity: true, pieceGrams: 30, defaultQuantity: 1, kcal: 233, protein: 7.0, fat: 1.5, carbs: 45.0, vitC: 0, vitB1: 0.12, vitB2: 0.06, vitB6: 0.1, vitB12: 0, folate: 0.02, vitA: 0, vitE: 0.8, vitD: 0, calcium: 25, magnesium: 30, iron: 2.0, iodine: 0.002 },
+{ name: 'Сосиска в тесте', category: 'Мучные изделия', hasQuantity: true, pieceGrams: 90, defaultQuantity: 1, kcal: 330, protein: 9.5, fat: 21, carbs: 24, vitC: 0, vitB1: 0.15, vitB2: 0.08, vitB6: 0.1, vitB12: 0.0002, folate: 0.02, vitA: 0, vitE: 0.8, vitD: 0, calcium: 25, magnesium: 20, iron: 1.2, iodine: 0.003 },
+{ name: 'Хачапури с сыром и ветчиной', category: 'Мучные изделия', hasQuantity: true, pieceGrams: 120, defaultQuantity: 1, kcal: 350, protein: 8.5, fat: 20, carbs: 32, vitC: 0, vitB1: 0.1, vitB2: 0.15, vitB6: 0.1, vitB12: 0.0003, folate: 0.02, vitA: 0.05, vitE: 0.5, vitD: 0.0001, calcium: 200, magnesium: 20, iron: 1.0, iodine: 0.005 },{ name: 'Самса', category: 'Мучные изделия', hasQuantity: true, pieceGrams: 150, defaultQuantity: 1, kcal: 300, protein: 9, fat: 18, carbs: 20, vitC: 0, vitB1: 0.1, vitB2: 0.1, vitB6: 0.1, vitB12: 0.0002, folate: 0.02, vitA: 0.02, vitE: 0.6, vitD: 0, calcium: 20, magnesium: 20, iron: 1.5, iodine: 0.004 },
+{ name: 'Блинчики со сгущенкой', category: 'Мучные изделия', hasQuantity: true, pieceGrams: 140, defaultQuantity: 1, kcal: 236, protein: 5.8, fat: 8.2, carbs: 33.6, vitC: 0.1, vitB1: 0.05, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0002, folate: 0.01, vitA: 0.03, vitE: 0.3, vitD: 0.0001, calcium: 60, magnesium: 15, iron: 0.6, iodine: 0.004 },
+{ name: 'Пицца домашняя', category: 'Мучные изделия', hasQuantity: true, pieceGrams: 120, defaultQuantity: 1, kcal: 266, protein: 12.0, fat: 13.0, carbs: 28.0, vitC: 0, vitB1: 0.1, vitB2: 0.1, vitB6: 0.1, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+{ name: 'Плюшка', category: 'Мучные изделия', hasQuantity: true, pieceGrams: 50, defaultQuantity: 1, kcal: 310, protein: 7.5, fat: 4.0, carbs: 62.0, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+{ name: 'Рулет с маком', category: 'Мучные изделия', hasQuantity: true, pieceGrams: 100, defaultQuantity: 1, kcal: 350, protein: 9.0, fat: 9.5, carbs: 57.0, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+{ name: 'Панкейки', category: 'Мучные изделия', hasQuantity: true, pieceGrams: 38, defaultQuantity: 1, kcal: 227, protein: 6.4, fat: 9.7, carbs: 28.3, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+{ name: 'Пирожок с мясом', category: 'Мучные изделия', hasQuantity: true, pieceGrams: 100, defaultQuantity: 1, kcal: 264, protein: 12.0, fat: 11.8, carbs: 27.8, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+{ name: 'Хот-дог', category: 'Мучные изделия', hasQuantity: true, pieceGrams: 180, defaultQuantity: 1, kcal: 269, protein: 10.2, fat: 13.5, carbs: 27.5, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+{ name: 'Бутерброд с колбасой', category: 'Мучные изделия', hasQuantity: true, pieceGrams: 80, defaultQuantity: 1, kcal: 250, protein: 12.0, fat: 13.0, carbs: 20.0, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 },
+
+// ПЕРВЫЕ БЛЮДА
+{ name: 'Суп домашний', category: 'Готовые блюда', subcategory: 'Первые блюда', hasQuantity: true, pieceGrams: 250, defaultQuantity: 1, kcal: 18, protein: 1.28, fat: 0.72, carbs: 1.6, vitC: 2, vitB1: 0.03, vitB2: 0.03, vitB6: 0.1, vitB12: 0.0001, folate: 0.01, vitA: 0.05, vitE: 0.3, vitD: 0, calcium: 15, magnesium: 15, iron: 0.5, iodine: 0.002 },
+{ name: 'Суп харчо', category: 'Готовые блюда', subcategory: 'Первые блюда', hasQuantity: true, pieceGrams: 250, defaultQuantity: 1, kcal: 74.72, protein: 3.12, fat: 4.48, carbs: 5.48, vitC: 3, vitB1: 0.04, vitB2: 0.05, vitB6: 0.15, vitB12: 0.0002, folate: 0.01, vitA: 0.03, vitE: 0.5, vitD: 0, calcium: 20, magnesium: 20, iron: 1, iodine: 0.003 },
+ 
+// ВТОРЫЕ БЛЮДА
+        { name: 'Наггетсы', category: 'Готовые блюда', subcategory: 'Вторые блюда', fixedPortion: true, hasQuantity: true, pieceGrams: 50, defaultQuantity: 1, kcal: 100, protein: 6, fat: 6.4, carbs: 7.2, vitC: 0, vitB1: 0.05, vitB2: 0.05, vitB6: 0.1, vitB12: 0.0002, folate: 0.003, vitA: 0.01, vitE: 0.5, vitD: 0.0001, calcium: 10, magnesium: 15, iron: 0.7, iodine: 0.002 },
+        { name: 'Котлеты говяжьи', category: 'Готовые блюда', subcategory: 'Вторые блюда', fixedPortion: true, hasQuantity: true, pieceGrams: 75, defaultQuantity: 1, kcal: 213, protein: 14.2, fat: 11.4, carbs: 13, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.2, vitB12: 0.0008, folate: 0.005, vitA: 0.01, vitE: 0.3, vitD: 0.0001, calcium: 15, magnesium: 20, iron: 1.5, iodine: 0.003 },
+        { name: 'Тефтели говяжьи', category: 'Готовые блюда', subcategory: 'Вторые блюда', fixedPortion: true, hasQuantity: true, pieceGrams: 60, defaultQuantity: 1, kcal: 249.83, protein: 12.33, fat: 15.17, carbs: 16, vitC: 0, vitB1: 0.04, vitB2: 0.1, vitB6: 0.15, vitB12: 0.0006, folate: 0.005, vitA: 0.01, vitE: 0.3, vitD: 0.0001, calcium: 12, magnesium: 18, iron: 1.2, iodine: 0.003 },
+{ name: 'Жаркое по-домашнему', category: 'Готовые блюда', subcategory: 'Вторые блюда', hasQuantity: true, pieceGrams: 250, defaultQuantity: 1, kcal: 106.8, protein: 6.5, fat: 4, carbs: 11.1, vitC: 4, vitB1: 0.08, vitB2: 0.1, vitB6: 0.2, vitB12: 0.0005, folate: 0.01, vitA: 0.03, vitE: 0.5, vitD: 0.0001, calcium: 15, magnesium: 20, iron: 1.3, iodine: 0.003 },
+{ name: 'Плов', category: 'Готовые блюда', subcategory: 'Вторые блюда', hasQuantity: true, pieceGrams: 250, defaultQuantity: 1, kcal: 166, protein: 14.8, fat: 16.4, carbs: 19.2, vitC: 2, vitB1: 0.1, vitB2: 0.08, vitB6: 0.15, vitB12: 0.0003, folate: 0.01, vitA: 0.05, vitE: 0.5, vitD: 0, calcium: 20, magnesium: 25, iron: 1.2, iodine: 0.003 },        
+{ name: 'Курица с овощами', category: 'Готовые блюда', subcategory: 'Вторые блюда', hasQuantity: true, pieceGrams: 150, defaultQuantity: 1, kcal: 124, protein: 5.5, fat: 7.1, carbs: 9.6, vitC: 10, vitB1: 0.05, vitB2: 0.08, vitB6: 0.3, vitB12: 0.0003, folate: 0.02, vitA: 0.15, vitE: 0.7, vitD: 0.0001, calcium: 20, magnesium: 25, iron: 1, iodine: 0.004 },
+{ name: 'Мясо говядина по-французски', category: 'Готовые блюда', subcategory: 'Вторые блюда', hasQuantity: true, pieceGrams: 150, defaultQuantity: 1, kcal: 236.67, protein: 16.67, fat: 22.67, carbs: 3.33, vitC: 2, vitB1: 0.06, vitB2: 0.15, vitB6: 0.3, vitB12: 0.001, folate: 0.01, vitA: 0.1, vitE: 0.5, vitD: 0.0003, calcium: 150, magnesium: 25, iron: 1.8, iodine: 0.004 },
+{ name: 'Пельмени отварные', category: 'Готовые блюда', subcategory: 'Вторые блюда', fixedPortion: true, hasQuantity: true, pieceGrams: 100, defaultQuantity: 1, kcal: 219, protein: 9.9, fat: 13.9, carbs: 13.5, vitC: 0, vitB1: 0.1, vitB2: 0.1, vitB6: 0.1, vitB12: 0.0003, folate: 0.01, vitA: 0.01, vitE: 0.3, vitD: 0.0001, calcium: 20, magnesium: 15, iron: 1.5, iodine: 0.004 },
+{ name: 'Вареники отварные с картофелем', category: 'Готовые блюда', subcategory: 'Вторые блюда', fixedPortion: true, hasQuantity: true, pieceGrams: 100, defaultQuantity: 1, kcal: 241.7, protein: 3.7, fat: 15.6, carbs: 23.0, vitC: 2, vitB1: 0.05, vitB2: 0.05, vitB6: 0.1, vitB12: 0, folate: 0.01, vitA: 0.01, vitE: 0.2, vitD: 0, calcium: 15, magnesium: 15, iron: 0.5, iodine: 0.002 },
+
+// ===================== Мясные продукты =====================
+        { name: 'Курица отварная', category: 'Мясные продукты', kcal: 243, protein: 22.6, fat: 17.0, carbs: 0, vitC: 0, vitB1: 0.05, vitB2: 0.14, vitB6: 0.3, vitB12: 0.0005, folate: 0.005, vitA: 0.01, vitE: 0.3, vitD: 0.0001, calcium: 14, magnesium: 20, iron: 1.2, iodine: 0.005 },
+        { name: 'Курица жареная', category: 'Мясные продукты', kcal: 272, protein: 23.3, fat: 19.8, carbs: 0.1, vitC: 0, vitB1: 0.06, vitB2: 0.14, vitB6: 0.28, vitB12: 0.0005, folate: 0.005, vitA: 0.015, vitE: 0.4, vitD: 0.0002, calcium: 16, magnesium: 22, iron: 1.4, iodine: 0.006 },
+        { name: 'Говядина отварная', category: 'Мясные продукты', kcal: 254.4, protein: 25.8, fat: 16.8, carbs: 0, vitC: 0, vitB1: 0.05, vitB2: 0.16, vitB6: 0.3, vitB12: 0.0026, folate: 0.008, vitA: 0, vitE: 0.5, vitD: 0.0001, calcium: 18, magnesium: 22, iron: 2.7, iodine: 0.003 },
+        { name: 'Говядина жареная', category: 'Мясные продукты', kcal: 167.6, protein: 28.4, fat: 6.0, carbs: 0, vitC: 0, vitB1: 0.07, vitB2: 0.15, vitB6: 0.3, vitB12: 0.0027, folate: 0.008, vitA: 0, vitE: 0.6, vitD: 0.0001, calcium: 16, magnesium: 24, iron: 2.9, iodine: 0.003 },
+        { name: 'Свинина отварная', category: 'Мясные продукты', kcal: 373.5, protein: 22.5, fat: 31.5, carbs: 0, vitC: 0, vitB1: 0.4, vitB2: 0.2, vitB6: 0.4, vitB12: 0.001, folate: 0.005, vitA: 0, vitE: 0.4, vitD: 0.0002, calcium: 14, magnesium: 20, iron: 1.5, iodine: 0.002 },
+        { name: 'Свинина жареная', category: 'Мясные продукты', kcal: 314.2, protein: 19.6, fat: 26.2, carbs: 0, vitC: 0, vitB1: 0.5, vitB2: 0.24, vitB6: 0.4, vitB12: 0.001, folate: 0.005, vitA: 0, vitE: 0.5, vitD: 0.0002, calcium: 15, magnesium: 22, iron: 1.6, iodine: 0.002 },
+
+        // ===================== Морепродукты =====================
+        { name: 'Карась жареный', category: 'Морепродукты', kcal: 204.7, protein: 17.3, fat: 11, carbs: 9.2, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.15, vitB12: 0.001, folate: 0.005, vitA: 0.01, vitE: 0.6, vitD: 0.002, calcium: 30, magnesium: 25, iron: 0.5, iodine: 0.005 },
+        { name: 'Чир', category: 'Морепродукты', kcal: 88, protein: 17.5, fat: 2, carbs: 0, vitC: 0, vitB1: 0.08, vitB2: 0.1, vitB6: 0.2, vitB12: 0.002, folate: 0.007, vitA: 0.02, vitE: 0.6, vitD: 0.003, calcium: 20, magnesium: 28, iron: 0.4, iodine: 0.01 },
+        { name: 'Ряпушка', category: 'Морепродукты', kcal: 88, protein: 17.5, fat: 2, carbs: 0, vitC: 0, vitB1: 0.06, vitB2: 0.1, vitB6: 0.18, vitB12: 0.0015, folate: 0.006, vitA: 0.01, vitE: 0.5, vitD: 0.0018, calcium: 25, magnesium: 22, iron: 0.4, iodine: 0.008 },
+        { name: 'Тунец в собственном соку', category: 'Морепродукты', kcal: 96, protein: 21.5, fat: 0.8, carbs: 0, vitC: 0, vitB1: 0.03, vitB2: 0.06, vitB6: 0.38, vitB12: 0.0042, folate: 0.005, vitA: 0.01, vitE: 0.5, vitD: 0.002, calcium: 10, magnesium: 38, iron: 1, iodine: 0.01 },
+        { name: 'Тунец свежий', category: 'Морепродукты', kcal: 144, protein: 23.3, fat: 4.9, carbs: 0, vitC: 0, vitB1: 0.05, vitB2: 0.1, vitB6: 0.5, vitB12: 0.005, folate: 0.005, vitA: 0.02, vitE: 0.6, vitD: 0.003, calcium: 10, magnesium: 40, iron: 1.2, iodine: 0.01 },
+        // ===================== Молочные продукты =====================
+        { name: 'Молоко', category: 'Молочные продукты', hasPercent: true, defaultVariant: '2.5%',
+          protein: 2.9, carbs: 4.8, vitC: 1, vitB1: 0.04, vitB2: 0.15, vitB6: 0.05, vitB12: 0.0004, folate: 0.005, vitA: 0.03, vitE: 0.1, vitD: 0.0001, calcium: 120, magnesium: 12, iron: 0.1, iodine: 0.02,
+          variants: {
+              '0.5%': { kcal: 38, fat: 0.5 },
+              '1%':   { kcal: 42, fat: 1.0 },
+              '2.5%': { kcal: 54, fat: 2.5 },
+              '3.2%': { kcal: 60, fat: 3.2 }
+          }
+        },
+        { name: 'Кефир', category: 'Молочные продукты', hasPercent: true, defaultVariant: '2.5%',
+          protein: 2.9, carbs: 4.0, vitC: 1, vitB1: 0.03, vitB2: 0.15, vitB6: 0.05, vitB12: 0.0004, folate: 0.005, vitA: 0.02, vitE: 0.1, vitD: 0.0001, calcium: 120, magnesium: 12, iron: 0.1, iodine: 0.02,
+          variants: {
+              '1%':   { kcal: 40, fat: 1.0 },
+              '2.5%': { kcal: 53, fat: 2.5 },
+              '3.2%': { kcal: 59, fat: 3.2 }
+          }
+        },
+        { name: 'Творог', category: 'Молочные продукты', hasPercent: true, defaultVariant: '5%',
+          protein: 17.0, carbs: 2.5, vitC: 0.5, vitB1: 0.04, vitB2: 0.2, vitB6: 0.1, vitB12: 0.0005, folate: 0.01, vitA: 0.04, vitE: 0.3, vitD: 0.0001, calcium: 164, magnesium: 23, iron: 0.4, iodine: 0.01,
+          variants: {
+              '0%':  { kcal: 110, fat: 0.6 },
+              '5%':  { kcal: 137, fat: 5.0 },
+              '9%':  { kcal: 159, fat: 9.0 },
+              '18%': { kcal: 236, fat: 18.0 }
+          }
+        },
+        { name: 'Сметана', category: 'Молочные продукты', hasPercent: true, defaultVariant: '15%',
+          protein: 2.5, carbs: 3.5, vitC: 0.3, vitB1: 0.03, vitB2: 0.1, vitB6: 0.05, vitB12: 0.0003, folate: 0.008, vitA: 0.1, vitE: 0.4, vitD: 0.0002, calcium: 86, magnesium: 8, iron: 0.2, iodine: 0.01,
+          variants: {
+              '10%': { kcal: 119, fat: 10.0 },
+              '15%': { kcal: 162, fat: 15.0 },
+              '20%': { kcal: 206, fat: 20.0 },
+              '25%': { kcal: 248, fat: 25.0 }
+          }
+        },
+        { name: 'Суорат (якутский)', category: 'Молочные продукты', kcal: 50, protein: 2.5, fat: 2.5, carbs: 4, vitC: 1, vitB1: 0.03, vitB2: 0.13, vitB6: 0.05, vitB12: 0.0003, folate: 0.005, vitA: 0.02, vitE: 0.1, vitD: 0.0001, calcium: 100, magnesium: 10, iron: 0.1, iodine: 0.015 },
+        { name: 'Йогурт питьевой', category: 'Молочные продукты', kcal: 90, protein: 4.0, fat: 1.5, carbs: 14.3, vitC: 1, vitB1: 0.03, vitB2: 0.15, vitB6: 0.05, vitB12: 0.0004, folate: 0.006, vitA: 0.02, vitE: 0.1, vitD: 0.0001, calcium: 124, magnesium: 14, iron: 0.1, iodine: 0.02 },
+        { name: 'Сыр', category: 'Молочные продукты', kcal: 364, protein: 23.2, fat: 29.5, carbs: 0, vitC: 0, vitB1: 0.03, vitB2: 0.3, vitB6: 0.1, vitB12: 0.001, folate: 0.01, vitA: 0.2, vitE: 0.5, vitD: 0.0005, calcium: 800, magnesium: 35, iron: 0.5, iodine: 0.02 },
+
+        // ===================== Овощи =====================
+{ name: 'Брокколи (отварная)', category: 'Овощи', kcal: 27, protein: 3.0, fat: 0.4, carbs: 4.0, vitC: 50, vitB1: 0.05, vitB2: 0.1, vitB6: 0.2, vitB12: 0, folate: 0.06, vitA: 0.08, vitE: 0.8, vitD: 0, calcium: 40, magnesium: 20, iron: 0.7, iodine: 0.003 },
+{ name: 'Морковь (сырая)', category: 'Овощи', kcal: 34, protein: 1.3, fat: 0.1, carbs: 6.9, vitC: 6, vitB1: 0.06, vitB2: 0.06, vitB6: 0.1, vitB12: 0, folate: 0.01, vitA: 0.8, vitE: 0.5, vitD: 0, calcium: 33, magnesium: 12, iron: 0.3, iodine: 0.002 },
+{ name: 'Морковь (отварная)', category: 'Овощи', kcal: 32, protein: 1.3, fat: 0.1, carbs: 6.4, vitC: 2, vitB1: 0.05, vitB2: 0.05, vitB6: 0.1, vitB12: 0, folate: 0.01, vitA: 0.8, vitE: 0.5, vitD: 0, calcium: 30, magnesium: 10, iron: 0.3, iodine: 0.002 },        { name: 'Перец болгарский (сырой)', category: 'Овощи', kcal: 27, protein: 1.3, fat: 0.1, carbs: 4.9, vitC: 128, vitB1: 0.05, vitB2: 0.08, vitB6: 0.3, vitB12: 0, folate: 0.02, vitA: 0.1, vitE: 0.7, vitD: 0, calcium: 10, magnesium: 12, iron: 0.5, iodine: 0.001 },
+        { name: 'Лук репчатый', category: 'Овощи', kcal: 41, protein: 1.4, fat: 0.2, carbs: 8.2, vitC: 10, vitB1: 0.05, vitB2: 0.02, vitB6: 0.12, vitB12: 0, folate: 0.009, vitA: 0, vitE: 0.2, vitD: 0, calcium: 31, magnesium: 14, iron: 0.8, iodine: 0.003 },
+        { name: 'Помидор', category: 'Овощи', kcal: 20, protein: 1.1, fat: 0.2, carbs: 3.7, vitC: 25, vitB1: 0.06, vitB2: 0.04, vitB6: 0.1, vitB12: 0, folate: 0.011, vitA: 0.02, vitE: 0.7, vitD: 0, calcium: 14, magnesium: 20, iron: 0.9, iodine: 0.002 },
+        { name: 'Огурец', category: 'Овощи', kcal: 14, protein: 0.8, fat: 0.1, carbs: 2.5, vitC: 10, vitB1: 0.03, vitB2: 0.04, vitB6: 0.06, vitB12: 0, folate: 0.004, vitA: 0.005, vitE: 0.1, vitD: 0, calcium: 23, magnesium: 14, iron: 0.6, iodine: 0.003 },
+        { name: 'Капуста белокочанная', category: 'Овощи', kcal: 28, protein: 1.8, fat: 0.1, carbs: 4.5, vitC: 45, vitB1: 0.03, vitB2: 0.04, vitB6: 0.1, vitB12: 0, folate: 0.022, vitA: 0.003, vitE: 0.1, vitD: 0, calcium: 48, magnesium: 16, iron: 0.6, iodine: 0.003 },
+
+// ===================== Фрукты =====================
+{ name: 'Яблоко', category: 'Фрукты', kcal: 44, protein: 0.4, fat: 0.4, carbs: 9.8, vitC: 10, vitB1: 0.03, vitB2: 0.02, vitB6: 0.08, vitB12: 0, folate: 0.002, vitA: 0.003, vitE: 0.2, vitD: 0, calcium: 16, magnesium: 9, iron: 0.2, iodine: 0.002 },
+{ name: 'Апельсин', category: 'Фрукты', kcal: 38, protein: 0.9, fat: 0.2, carbs: 8.1, vitC: 53, vitB1: 0.09, vitB2: 0.04, vitB6: 0.06, vitB12: 0, folate: 0.03, vitA: 0.01, vitE: 0.2, vitD: 0, calcium: 40, magnesium: 10, iron: 0.1, iodine: 0.001 },
+{ name: 'Мандарин', category: 'Фрукты', kcal: 35, protein: 0.8, fat: 0.2, carbs: 7.5, vitC: 38, vitB1: 0.06, vitB2: 0.03, vitB6: 0.06, vitB12: 0, folate: 0.016, vitA: 0.01, vitE: 0.2, vitD: 0, calcium: 35, magnesium: 11, iron: 0.1, iodine: 0.001 },
+{ name: 'Банан', category: 'Фрукты', kcal: 95, protein: 1.5, fat: 0.5, carbs: 21.0, vitC: 8.7, vitB1: 0.03, vitB2: 0.06, vitB6: 0.4, vitB12: 0, folate: 0.02, vitA: 0.003, vitE: 0.1, vitD: 0, calcium: 5, magnesium: 27, iron: 0.3, iodine: 0.001 },
+{ name: 'Груша', category: 'Фрукты', kcal: 46, protein: 0.4, fat: 0.3, carbs: 10.3, vitC: 5, vitB1: 0.02, vitB2: 0.03, vitB6: 0.03, vitB12: 0, folate: 0.002, vitA: 0.001, vitE: 0.1, vitD: 0, calcium: 10, magnesium: 12, iron: 0.2, iodine: 0.001 },
+{ name: 'Киви', category: 'Фрукты', kcal: 39, protein: 0.8, fat: 0.4, carbs: 8.1, vitC: 92, vitB1: 0.02, vitB2: 0.02, vitB6: 0.1, vitB12: 0, folate: 0.03, vitA: 0.007, vitE: 1.5, vitD: 0, calcium: 34, magnesium: 17, iron: 0.3, iodine: 0.001 },
+{ name: 'Малина', category: 'Фрукты', kcal: 41, protein: 0.8, fat: 0.5, carbs: 8.3, vitC: 25, vitB1: 0.02, vitB2: 0.05, vitB6: 0.07, vitB12: 0, folate: 0.006, vitA: 0.002, vitE: 0.6, vitD: 0, calcium: 40, magnesium: 22, iron: 0.7, iodine: 0.001 },
+{ name: 'Клубника', category: 'Фрукты', kcal: 41, protein: 0.8, fat: 0.4, carbs: 7.5, vitC: 60, vitB1: 0.03, vitB2: 0.05, vitB6: 0.06, vitB12: 0, folate: 0.02, vitA: 0.005, vitE: 0.5, vitD: 0, calcium: 40, magnesium: 18, iron: 0.4, iodine: 0.001 },
+{ name: 'Голубика', category: 'Фрукты', kcal: 35, protein: 1.0, fat: 0.5, carbs: 6.6, vitC: 20, vitB1: 0.01, vitB2: 0.02, vitB6: 0.05, vitB12: 0, folate: 0.006, vitA: 0.003, vitE: 0.6, vitD: 0, calcium: 16, magnesium: 7, iron: 0.3, iodine: 0.001 },
+{ name: 'Виноград', category: 'Фрукты', kcal: 69, protein: 0.6, fat: 0.6, carbs: 15.4, vitC: 6, vitB1: 0.05, vitB2: 0.02, vitB6: 0.1, vitB12: 0, folate: 0.002, vitA: 0.005, vitE: 0.4, vitD: 0, calcium: 30, magnesium: 17, iron: 0.6, iodine: 0.001 },        
+
+// ===================== Кондитерские изделия =====================
+        { name: 'Пирожное суфле', category: 'Кондитерские изделия', kcal: 324, protein: 8.1, fat: 5.6, carbs: 80, vitC: 0, vitB1: 0.02, vitB2: 0.03, vitB6: 0.01, vitB12: 0, folate: 0.005, vitA: 0.14, vitE: 0.3, vitD: 0, calcium: 42, magnesium: 4, iron: 0.2, iodine: 0.002 },
+        { name: 'Эклер с заварным кремом', category: 'Кондитерские изделия', kcal: 320, protein: 5.4, fat: 20, carbs: 30, vitC: 0.5, vitB1: 0.04, vitB2: 0.15, vitB6: 0.05, vitB12: 0.0003, folate: 0.01, vitA: 0.1, vitE: 0.5, vitD: 0.0004, calcium: 80, magnesium: 12, iron: 0.6, iodine: 0.005 },
+        { name: 'Тирамису', category: 'Кондитерские изделия', kcal: 283, protein: 5, fat: 20, carbs: 22, vitC: 0.3, vitB1: 0.03, vitB2: 0.12, vitB6: 0.05, vitB12: 0.0003, folate: 0.008, vitA: 0.15, vitE: 0.5, vitD: 0.0003, calcium: 90, magnesium: 15, iron: 0.5, iodine: 0.004 },
+        { name: 'Чизкейк', category: 'Кондитерские изделия', kcal: 321, protein: 5.5, fat: 22, carbs: 26, vitC: 0.4, vitB1: 0.03, vitB2: 0.13, vitB6: 0.05, vitB12: 0.0003, folate: 0.009, vitA: 0.13, vitE: 0.6, vitD: 0.0003, calcium: 100, magnesium: 12, iron: 0.5, iodine: 0.005 },
+        { name: 'Мороженое пломбир', category: 'Кондитерские изделия', kcal: 227, protein: 3.5, fat: 15, carbs: 20, vitC: 0.5, vitB1: 0.04, vitB2: 0.12, vitB6: 0.05, vitB12: 0.0004, folate: 0.005, vitA: 0.1, vitE: 0.4, vitD: 0.0002, calcium: 120, magnesium: 14, iron: 0.1, iodine: 0.01 },
+        { name: 'Шоколад молочный', category: 'Кондитерские изделия', kcal: 535, protein: 7.6, fat: 30, carbs: 56, vitC: 0, vitB1: 0.1, vitB2: 0.3, vitB6: 0.05, vitB12: 0.0005, folate: 0.01, vitA: 0.03, vitE: 0.8, vitD: 0.0003, calcium: 200, magnesium: 60, iron: 1.5, iodine: 0.005 },
+        { name: 'Печенье овсяное', category: 'Кондитерские изделия', kcal: 437, protein: 6.5, fat: 14, carbs: 71, vitC: 0, vitB1: 0.15, vitB2: 0.07, vitB6: 0.08, vitB12: 0.0001, folate: 0.015, vitA: 0.01, vitE: 0.8, vitD: 0, calcium: 40, magnesium: 40, iron: 1.5, iodine: 0.003 },
+        
+
+// ===================== Сухофрукты =====================
+{ name: 'Курага', category: 'Сухофрукты', kcal: 232, protein: 5.2, fat: 0.1, carbs: 65.9, vitC: 4, vitB1: 0.02, vitB2: 0.1, vitB6: 0.15, vitB12: 0, folate: 0.01, vitA: 0.583, vitE: 5.5, vitD: 0, calcium: 160, magnesium: 105, iron: 3.2, iodine: 0.002 },
+{ name: 'Урюк', category: 'Сухофрукты', kcal: 278, protein: 5.0, fat: 0.4, carbs: 67.5, vitC: 4, vitB1: 0.02, vitB2: 0.1, vitB6: 0.15, vitB12: 0, folate: 0.01, vitA: 0.5, vitE: 5.0, vitD: 0, calcium: 150, magnesium: 100, iron: 3.0, iodine: 0.002 },
+{ name: 'Изюм с косточкой', category: 'Сухофрукты', kcal: 276, protein: 1.8, fat: 0.2, carbs: 70.9, vitC: 2, vitB1: 0.05, vitB2: 0.08, vitB6: 0.2, vitB12: 0, folate: 0.005, vitA: 0.006, vitE: 0.5, vitD: 0, calcium: 80, magnesium: 42, iron: 3.0, iodine: 0.002 },
+{ name: 'Изюм кишмиш', category: 'Сухофрукты', kcal: 279, protein: 2.3, fat: 0.1, carbs: 71.2, vitC: 2, vitB1: 0.05, vitB2: 0.08, vitB6: 0.2, vitB12: 0, folate: 0.005, vitA: 0.006, vitE: 0.5, vitD: 0, calcium: 80, magnesium: 42, iron: 3.0, iodine: 0.002 },
+{ name: 'Чернослив', category: 'Сухофрукты', kcal: 256, protein: 2.3, fat: 0.7, carbs: 57.5, vitC: 3, vitB1: 0.02, vitB2: 0.1, vitB6: 0.1, vitB12: 0, folate: 0.004, vitA: 0.01, vitE: 1.8, vitD: 0, calcium: 80, magnesium: 102, iron: 3.0, iodine: 0.002 },
+{ name: 'Финики', category: 'Сухофрукты', kcal: 292, protein: 2.5, fat: 0.5, carbs: 69.2, vitC: 1, vitB1: 0.05, vitB2: 0.06, vitB6: 0.1, vitB12: 0, folate: 0.01, vitA: 0, vitE: 0.3, vitD: 0, calcium: 65, magnesium: 69, iron: 1.5, iodine: 0.002 },
+{ name: 'Инжир сушёный', category: 'Сухофрукты', kcal: 257, protein: 3.1, fat: 0.8, carbs: 57.9, vitC: 2, vitB1: 0.05, vitB2: 0.1, vitB6: 0.1, vitB12: 0, folate: 0.01, vitA: 0.013, vitE: 0.3, vitD: 0, calcium: 144, magnesium: 59, iron: 0.3, iodine: 0.002 },
+{ name: 'Вишня сушёная', category: 'Сухофрукты', kcal: 292, protein: 1.5, fat: 0.3, carbs: 73.0, vitC: 3, vitB1: 0.03, vitB2: 0.05, vitB6: 0.1, vitB12: 0, folate: 0.005, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 40, magnesium: 30, iron: 1.5, iodine: 0.001 },
+{ name: 'Груша сушёная', category: 'Сухофрукты', kcal: 246, protein: 2.3, fat: 0.4, carbs: 62.1, vitC: 4, vitB1: 0.02, vitB2: 0.05, vitB6: 0.05, vitB12: 0, folate: 0.005, vitA: 0.005, vitE: 0.3, vitD: 0, calcium: 30, magnesium: 20, iron: 1.0, iodine: 0.001 },
+{ name: 'Яблоки сушёные', category: 'Сухофрукты', kcal: 273, protein: 3.2, fat: 0.5, carbs: 68.0, vitC: 5, vitB1: 0.03, vitB2: 0.05, vitB6: 0.08, vitB12: 0, folate: 0.005, vitA: 0.005, vitE: 0.5, vitD: 0, calcium: 20, magnesium: 15, iron: 1.5, iodine: 0.001 },
+{ name: 'Персики сушёные', category: 'Сухофрукты', kcal: 275, protein: 3.0, fat: 0.4, carbs: 68.5, vitC: 4, vitB1: 0.02, vitB2: 0.05, vitB6: 0.05, vitB12: 0, folate: 0.005, vitA: 0.1, vitE: 1.0, vitD: 0, calcium: 50, magnesium: 30, iron: 2.0, iodine: 0.001 },
+{ name: 'Абрикос сушёный', category: 'Сухофрукты', kcal: 227, protein: 5.0, fat: 0.1, carbs: 53.0, vitC: 4, vitB1: 0.02, vitB2: 0.1, vitB6: 0.1, vitB12: 0, folate: 0.01, vitA: 0.5, vitE: 3.0, vitD: 0, calcium: 150, magnesium: 80, iron: 3.0, iodine: 0.002 },
+{ name: 'Шиповник сушёный', category: 'Сухофрукты', kcal: 253, protein: 4.0, fat: 0.5, carbs: 60.0, vitC: 100, vitB1: 0.05, vitB2: 0.1, vitB6: 0.1, vitB12: 0, folate: 0.01, vitA: 0.2, vitE: 2.0, vitD: 0, calcium: 100, magnesium: 50, iron: 2.0, iodine: 0.001 },
+{ name: 'Кизил сушёный', category: 'Сухофрукты', kcal: 209, protein: 4.6, fat: 0.3, carbs: 46.3, vitC: 10, vitB1: 0.03, vitB2: 0.05, vitB6: 0.08, vitB12: 0, folate: 0.005, vitA: 0.02, vitE: 0.5, vitD: 0, calcium: 40, magnesium: 30, iron: 1.5, iodine: 0.001 },
+{ name: 'Хурма вяленая', category: 'Сухофрукты', kcal: 274, protein: 1.7, fat: 0.6, carbs: 66.9, vitC: 5, vitB1: 0.02, vitB2: 0.03, vitB6: 0.05, vitB12: 0, folate: 0.005, vitA: 0.1, vitE: 0.5, vitD: 0, calcium: 30, magnesium: 20, iron: 1.0, iodine: 0.001 },
+
+        // ===================== Прочее =====================
+{ name: 'Масло подсолнечное', category: 'Прочее', kcal: 899, protein: 0, fat: 99.9, carbs: 0, vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0, vitA: 0, vitE: 40, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0 }
+    ];
+
+    const ADD_PRODUCTS_MAP = {
+        'Калории': ['Миндаль', 'Сыр', 'Карась жареный'],
+        'Белки': ['Курица отварная', 'Говядина жареная', 'Говядина отварная', 'Чир', 'Ряпушка', 'Творог', 'Яйцо куриное отварное (1 шт)'],
+        'Жиры': ['Миндаль', 'Масло подсолнечное', 'Свинина отварная'],
+        'Углеводы': ['Гречка (варёная)', 'Овсянка (варёная на воде)', 'Хлеб цельнозерновой', 'Рис белый (варёный)'],
+        'Витамин C': ['Перец болгарский (сырой)', 'Клубника', 'Киви', 'Апельсин', 'Капуста белокочанная'],
+        'Кальций': ['Сыр', 'Творог', 'Молоко', 'Миндаль'],
+        'Железо': ['Говядина отварная', 'Говядина жареная', 'Гречка (варёная)', 'Яйцо куриное отварное (1 шт)'],
+        'Витамин D': ['Чир', 'Яйцо куриное отварное (1 шт)', 'Молоко'],
+        'Витамин B12': ['Говядина отварная', 'Курица отварная', 'Чир', 'Яйцо куриное отварное (1 шт)'],
+        'Витамин A': ['Морковь (сырая)', 'Чир', 'Яйцо куриное отварное (1 шт)'],
+        'Витамин E': ['Миндаль', 'Масло подсолнечное'],
+        'Витамин B1': ['Свинина отварная', 'Свинина жареная', 'Гречка (варёная)', 'Овсянка (варёная на воде)', 'Хлеб цельнозерновой'],
+        'Витамин B2': ['Молоко', 'Яйцо куриное отварное (1 шт)', 'Сыр', 'Творог'],
+        'Витамин B6': ['Курица отварная', 'Курица жареная', 'Чир', 'Банан', 'Картофель (варёный)'],
+        'Фолаты (B9)': ['Брокколи (варёная)', 'Капуста белокочанная'],
+        'Магний': ['Миндаль', 'Гречка (варёная)', 'Овсянка (варёная на воде)'],
+        'Йод': ['Ряпушка', 'Чир']
+    };
+
+    const SWAP_MAP = {
+        'Витамин C':  { bad: 'Сок из пакета', good: ['Перец болгарский (сырой)', 'Киви', 'Апельсин', 'Клубника'] },
+        'Кальций':    { bad: 'Творожный сырок', good: ['Творог', 'Миндаль', 'Сыр'] },
+        'Железо':     { bad: 'Яблочный сок', good: ['Говядина отварная', 'Говядина жареная', 'Гречка (варёная)'] },
+        'Белки':      { bad: 'Колбаса', good: ['Курица отварная', 'Курица жареная', 'Говядина отварная', 'Чир', 'Ряпушка'] },
+        'Витамин A':  { bad: 'Сладкие перекусы', good: ['Морковь (сырая)', 'Чир'] },
+        'Витамин D':  { bad: 'Сладости', good: ['Чир', 'Яйцо куриное отварное (1 шт)'] },
+        'Витамин B12':{ bad: 'Сладкие батончики', good: ['Говядина отварная', 'Курица отварная', 'Чир', 'Яйцо куриное отварное (1 шт)'] },
+        'Йод':        { bad: 'Обычная соль', good: ['Ряпушка', 'Чир'] },
+        'Магний':     { bad: 'Сладости', good: ['Миндаль', 'Гречка (варёная)', 'Овсянка (варёная на воде)'] },
+        'Витамин E':  { bad: 'Майонез', good: ['Миндаль', 'Масло подсолнечное'] },
+        'Углеводы':   { bad: 'Белый хлеб и выпечка', good: ['Гречка (варёная)', 'Овсянка (варёная на воде)', 'Хлеб цельнозерновой', 'Рис белый (варёный)'] },
+        'Витамин B1': { bad: 'Белый хлеб', good: ['Свинина отварная', 'Свинина жареная', 'Гречка (варёная)', 'Овсянка (варёная на воде)'] },
+        'Витамин B2': { bad: 'Сладкий йогурт', good: ['Молоко', 'Кефир', 'Творог', 'Йогурт питьевой'] },
+        'Витамин B6': { bad: 'Сладкие батончики', good: ['Курица отварная', 'Курица жареная', 'Банан', 'Картофель (варёный)'] },
+        'Фолаты (B9)':{ bad: 'Сладкие хлопья', good: ['Брокколи (варёная)', 'Капуста белокочанная'] }
+    };
+
+    const DEFAULT_ADD_PRODUCTS = [
+        'Курица отварная',
+        'Курица жареная',
+        'Говядина отварная',
+        'Гречка (варёная)',
+        'Творог',
+        'Перец болгарский (сырой)',
+        'Миндаль'
+    ];
+
+    let userNorms = null;
+    let userBmi = null;
+    let diary = [];
+    let activeCategory = null;
+    let activeSubcategory = null;
+
+    function switchTab(tabNum) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab' + tabNum).classList.add('active');
+        document.getElementById('tab' + tabNum + 'Btn').classList.add('active');
+        if (tabNum === 2) renderFoodSelector();
+        if (tabNum === 3) renderDiary();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function getBMICategory(bmi) {
+        // Согласно МР 2.3.1.0453-21 (Таблица 2)
+        if (bmi < 18.5) return { text: 'Дефицит массы тела', cls: 'bmi-danger' };
+        if (bmi < 25) return { text: 'Нормальная масса тела', cls: 'bmi-ok' };
+        if (bmi < 30) return { text: 'Избыточная масса тела', cls: 'bmi-warn' };
+        if (bmi < 35) return { text: 'Ожирение I степени', cls: 'bmi-danger' };
+        if (bmi < 40) return { text: 'Ожирение II степени', cls: 'bmi-danger' };
+        return { text: 'Ожирение III степени', cls: 'bmi-danger' };
+    }
+
+    function bmiDisplayHTML(bmi) {
+        const cat = getBMICategory(bmi);
+        const bmiStr = bmi.toFixed(1);
+        const minScale = 15, maxScale = 40;
+        const clamped = Math.max(minScale, Math.min(maxScale, bmi));
+        const positionPct = ((clamped - minScale) / (maxScale - minScale)) * 100;
+
+        return `
+            <div class="bmi-display">
+                <div class="bmi-value-box">
+                    <div class="bmi-number">${bmiStr}</div>
+                    <div class="bmi-unit">кг/м²</div>
+                </div>
+                <div class="bmi-info">
+                    <div class="bmi-category ${cat.cls}">${cat.text}</div>
+                    <div class="bmi-scale-wrapper">
+                        <div class="bmi-range-bar">
+                            <div style="background:#5ba9d9; flex: 3.5;"></div>
+                            <div style="background: var(--green-600); flex: 6.5;"></div>
+                            <div style="background:#e6a23c; flex: 5;"></div>
+                            <div style="background: var(--danger); flex: 10;"></div>
+                        </div>
+                        <div class="bmi-marker" style="left: ${positionPct}%;"></div>
+                    </div>
+                    <div class="bmi-range-legend">
+                        <span class="leg-under">&lt; 18,5</span>
+                        <span class="leg-normal">18,5–24,9</span>
+                        <span class="leg-over">25–29,9</span>
+                        <span class="leg-obese">≥ 30</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function updateBMIInline() {
+        const height = parseFloat(document.getElementById('height').value);
+        const weight = parseFloat(document.getElementById('weight').value);
+        const container = document.getElementById('bmiInlineCard');
+        const heightOk = height >= 140 && height <= 220;
+        const weightOk = weight >= 40 && weight <= 180;
+
+        if (!heightOk || !weightOk) {
+            userBmi = null;
+            container.innerHTML = `
+                <h2>⚖️ Индекс массы тела (ИМТ)</h2>
+                <p class="bmi-placeholder">Введите корректные рост (140–220 см) и вес (40–180 кг), чтобы увидеть ИМТ.</p>
+            `;
+            return;
+        }
+
+        const heightM = height / 100;
+        const bmi = weight / (heightM * heightM);
+        userBmi = bmi;
+        container.innerHTML = `
+            <h2>⚖️ Индекс массы тела (ИМТ)</h2>
+            ${bmiDisplayHTML(bmi)}
+        `;
+    }
+
+    function getCategories() {
+        const cats = [];
+        FOODS.forEach(f => {
+            if (!cats.includes(f.category)) cats.push(f.category);
+        });
+        const idx = cats.indexOf('Готовые блюда');
+        if (idx > 0) {
+            cats.splice(idx, 1);
+            cats.unshift('Готовые блюда');
+        }
+        return cats;
+    }
+
+    function getSubcategories(category) {
+        const subs = [];
+        FOODS.forEach(f => {
+            if (f.category === category && f.subcategory && !subs.includes(f.subcategory)) {
+                subs.push(f.subcategory);
+            }
+        });
+        return subs;
+    }
+
+    function isInDiaryByCategory(cat) {
+        return diary.some(entry => FOODS[entry.foodIndex].category === cat);
+    }
+
+    function scrollTabsToActive(smooth) {
+        const container = document.getElementById('categoryTabs');
+        if (!container) return;
+        const activeBtn = container.querySelector('.cat-pill.active');
+        if (!activeBtn) return;
+
+        const target = activeBtn.offsetLeft - container.clientWidth / 2 + activeBtn.clientWidth / 2;
+        const maxLeft = container.scrollWidth - container.clientWidth;
+        const left = Math.max(0, Math.min(maxLeft, target));
+
+        container.scrollTo({ left: left, behavior: smooth === false ? 'auto' : 'smooth' });
+    }
+
+    function renderFoodSelector() {
+        const cats = getCategories();
+        if (!activeCategory || !cats.includes(activeCategory)) activeCategory = cats[0];
+
+        const tabsContainer = document.getElementById('categoryTabs');
+        tabsContainer.innerHTML = '';
+        cats.forEach(cat => {
+            const btn = document.createElement('button');
+            btn.className = 'cat-pill' + (cat === activeCategory ? ' active' : '');
+            btn.innerHTML = cat + (isInDiaryByCategory(cat) ? ' <span class="pill-check">✓</span>' : '');
+            btn.onclick = () => {
+                activeCategory = cat;
+                renderFoodSelector();
+            };
+            tabsContainer.appendChild(btn);
+        });
+
+        document.getElementById('categoryHeading').textContent = activeCategory;
+
+        const subcatsContainer = document.getElementById('subcategoryTabs');
+        const subcats = getSubcategories(activeCategory);
+        if (subcats.length > 0) {
+            if (!activeSubcategory || !subcats.includes(activeSubcategory)) {
+                activeSubcategory = subcats[0];
+            }
+            subcatsContainer.innerHTML = '';
+            subcats.forEach(sub => {
+                const btn = document.createElement('button');
+                btn.className = 'subcat-pill' + (sub === activeSubcategory ? ' active' : '');
+                btn.textContent = sub;
+                btn.onclick = () => {
+                    activeSubcategory = sub;
+                    renderFoodSelector();
+                };
+                subcatsContainer.appendChild(btn);
+            });
+            subcatsContainer.style.display = 'flex';
+        } else {
+            activeSubcategory = null;
+            subcatsContainer.innerHTML = '';
+            subcatsContainer.style.display = 'none';
+        }
+
+        renderProducts();
+        renderNextButton();
+
+        requestAnimationFrame(() => scrollTabsToActive(true));
+    }
+
+    function getDisplayValues(food, variant) {
+        if (food.hasPercent) {
+            const v = food.variants[variant] || food.variants[food.defaultVariant];
+            return { kcal: v.kcal, fat: v.fat, protein: food.protein, carbs: food.carbs };
+        }
+        return { kcal: food.kcal, fat: food.fat, protein: food.protein, carbs: food.carbs };
+    }
+
+        function getCardDisplay(food, entry, variant) {
+        if (food.hasQuantity || food.fixedPortion) {
+            const defaultGrams = food.hasQuantity
+                ? food.pieceGrams * (food.defaultQuantity || 1)
+                : food.portionGrams;
+            const grams = entry ? entry.grams : defaultGrams;
+            const n = getNutrients(food, grams, variant);
+            return {
+                kcal: n.kcal.toFixed(0),
+                protein: n.protein.toFixed(1),
+                fat: n.fat.toFixed(1),
+                carbs: n.carbs.toFixed(1),
+                grams
+            };
+        }
+        const d = getDisplayValues(food, variant);
+        return { kcal: d.kcal, protein: d.protein, fat: d.fat, carbs: d.carbs, grams: 100 };
+    }
+
+    function renderProducts() {
+        const grid = document.getElementById('productsGrid');
+        grid.innerHTML = '';
+        const items = FOODS
+            .map((food, index) => ({ food, index }))
+            .filter(({ food }) => food.category === activeCategory)
+            .filter(({ food }) => !activeSubcategory || food.subcategory === activeSubcategory);
+
+        items.forEach(({ food, index }) => {
+            const entry = diary.find(e => e.foodIndex === index);
+            const selected = !!entry;
+            const grams = selected ? entry.grams : 100;
+            const currentVariant = selected && food.hasPercent ? entry.variant : food.defaultVariant;
+            const disp = getCardDisplay(food, entry, currentVariant);
+
+            let percentRowHtml = '';
+            if (selected && food.hasPercent) {
+                const pills = Object.keys(food.variants).map(v =>
+                    `<button class="percent-pill ${entry.variant === v ? 'active' : ''}" onclick="updateVariant(${index}, '${v}')">${v}</button>`
+                ).join('');
+                percentRowHtml = `
+                    <div class="percent-row">
+                        <span class="percent-label">Жирность:</span>
+                        ${pills}
+                    </div>`;
+            }
+
+                        let portionMeta = '';
+            if (food.hasQuantity) {
+                const qty = selected ? (entry.quantity || 1) : (food.defaultQuantity || 1);
+                portionMeta = `<span>${qty} шт · ${disp.grams} г</span>`;
+            } else if (food.fixedPortion) {
+                portionMeta = `<span>${food.portionGrams} г</span>`;
+            }
+
+            let portionRowHtml = '';
+            if (food.fixedPortion && !food.hasQuantity) {
+                portionRowHtml = `
+                    <div class="portion-row">
+                        <span>Порция:</span> <b>${food.portionGrams} г</b>
+                    </div>`;
+            }
+
+            let quantityRowHtml = '';
+            if (food.hasQuantity && selected) {
+                const qty = entry.quantity || 1;
+                quantityRowHtml = `
+                    <div class="quantity-row">
+                        <span class="qty-label">Кол-во (шт):</span>
+                        <button class="qty-btn" onclick="updateQuantity(${index}, -1)" title="Уменьшить">−</button>
+                        <input type="number" class="qty-input" min="0.1" max="100" step="0.1" value="${qty}"
+                               onchange="updateQuantityInput(${index}, this)"
+                               onblur="restoreQuantity(${index}, this)">
+                        <button class="qty-btn" onclick="updateQuantity(${index}, 1)" title="Увеличить">+</button>
+                        <span class="unit">(${entry.grams} г)</span>
+                    </div>`;
+            }
+
+            const showGramsInput = selected && !food.fixedPortion && !food.hasQuantity;
+
+            const card = document.createElement('div');
+            card.className = 'product-card' + (selected ? ' selected' : '');
+            card.innerHTML = `
+                <div class="product-top">
+                    <button class="toggle-btn ${selected ? 'active' : ''}"
+                            onclick="toggleProduct(${index})"
+                            title="${selected ? 'Убрать из дневника' : 'Добавить в дневник'}">
+                        ${selected ? '✓' : '+'}
+                    </button>
+                    <div class="product-info">
+                        <div class="product-name">${food.name}</div>
+                        <div class="product-meta" style="display: block;">
+                            ${portionMeta ? `<div style="margin-bottom: 6px; color: var(--muted); font-size: 0.75rem; font-weight: 600;">${portionMeta}</div>` : ''}
+                            <div class="macro-badges">
+                                <span class="macro-badge badge-kcal">${disp.kcal} ккал</span>
+                                <span class="macro-badge badge-protein">Б ${disp.protein}</span>
+                                <span class="macro-badge badge-fat">Ж ${disp.fat}</span>
+                                <span class="macro-badge badge-carbs">У ${disp.carbs}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ${percentRowHtml}
+                ${portionRowHtml}
+                ${quantityRowHtml}
+                ${showGramsInput ? `
+                <div class="grams-row">
+                    <label>Граммы:</label>
+                    <input type="number" min="1" max="2000" value="${grams}"
+                           oninput="updateGrams(${index}, this)"
+                           onblur="restoreGrams(${index}, this)">
+                    <span class="unit">г</span>
+                </div>` : ''}
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function renderNextButton() {
+        const cats = getCategories();
+        const idx = cats.indexOf(activeCategory);
+        const wrapper = document.getElementById('nextBtnWrapper');
+
+        let nextBtnHtml = '';
+        if (idx < cats.length - 1) {
+            const nextCat = cats[idx + 1];
+            nextBtnHtml = `
+                <button class="next-category-btn" onclick="goNextCategory()">
+                    Далее: ${nextCat} <span aria-hidden="true">→</span>
+                </button>
+            `;
+        } else {
+            nextBtnHtml = `
+                <button class="next-category-btn done" onclick="finishSelection()">
+                    Готово — открыть дневник питания <span aria-hidden="true">✓</span>
+                </button>
+            `;
+        }
+
+        wrapper.innerHTML = `
+            ${nextBtnHtml}
+            <button class="skip-to-results-btn" onclick="skipToResults()">
+                Перейти к результатам <span aria-hidden="true">→</span>
+            </button>
+        `;
+    }
+
+    function goNextCategory() {
+        const cats = getCategories();
+        const idx = cats.indexOf(activeCategory);
+        if (idx < cats.length - 1) {
+            activeCategory = cats[idx + 1];
+            activeSubcategory = null;
+            renderFoodSelector();
+            document.getElementById('categoryTabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function finishSelection() {
+        document.getElementById('tab3Btn').disabled = false;
+        switchTab(3);
+    }
+
+    function skipToResults() {
+        finishSelection();
+    }
+
+    function toggleProduct(index) {
+        if (!userNorms) {
+            alert('Сначала рассчитайте персональные нормы на вкладке «Персональные данные».');
+            switchTab(1);
+            return;
+        }
+        const existing = diary.findIndex(e => e.foodIndex === index);
+        if (existing >= 0) {
+            diary.splice(existing, 1);
+        } else {
+            const food = FOODS[index];
+            const variant = food.hasPercent ? food.defaultVariant : null;
+            const quantity = food.hasQuantity ? (food.defaultQuantity || 1) : null;
+            const grams = food.hasQuantity
+                ? food.pieceGrams * quantity
+                : (food.fixedPortion ? food.portionGrams : 100);
+            diary.push({ foodIndex: index, grams, variant, quantity });
+        }
+        renderFoodSelector();
+    }
+
+    function updateVariant(index, variant) {
+        const entry = diary.find(e => e.foodIndex === index);
+        if (entry) {
+            entry.variant = variant;
+            renderFoodSelector();
+        }
+    }
+
+    function updateQuantity(index, delta) {
+        const entry = diary.find(e => e.foodIndex === index);
+        if (!entry) return;
+        const food = FOODS[index];
+        if (!food.hasQuantity) return;
+
+        const current = entry.quantity || 1;
+        const next = Math.max(1, current + delta);
+        entry.quantity = next;
+        entry.grams = food.pieceGrams * next;
+        renderFoodSelector();
+    }
+    function updateQuantityInput(index, inputEl) {
+        const entry = diary.find(e => e.foodIndex === index);
+        if (!entry) return;
+        const food = FOODS[index];
+        if (!food.hasQuantity) return;
+
+        const val = parseFloat(inputEl.value);
+        if (!val || val <= 0) return;
+
+        entry.quantity = val;
+        entry.grams = food.pieceGrams * val;
+        renderFoodSelector();
+    }
+
+    function restoreQuantity(index, inputEl) {
+        const entry = diary.find(e => e.foodIndex === index);
+        if (!entry) return;
+        const val = parseFloat(inputEl.value);
+        if (!val || val <= 0) {
+            inputEl.value = entry.quantity || 1;
+        }
+    }
+    function updateGrams(index, inputEl) {
+        const food = FOODS[index];
+        if (food.fixedPortion || food.hasQuantity) return;
+
+        const val = parseFloat(inputEl.value);
+        const entry = diary.find(e => e.foodIndex === index);
+        if (entry && val && val > 0) {
+            entry.grams = val;
+        }
+    }
+
+    function restoreGrams(index, inputEl) {
+        const food = FOODS[index];
+        if (food.fixedPortion || food.hasQuantity) return;
+
+        const entry = diary.find(e => e.foodIndex === index);
+        if (entry) {
+            const val = parseFloat(inputEl.value);
+            if (!val || val <= 0) {
+                inputEl.value = entry.grams;
+            }
+        }
+    }
+
+    function calculate() {
+        const gender = document.getElementById('gender').value;
+        const age = parseFloat(document.getElementById('age').value);
+        const height = parseFloat(document.getElementById('height').value);
+        const weight = parseFloat(document.getElementById('weight').value);
+        const activity = parseFloat(document.getElementById('activity').value);
+
+        if (!age || !height || !weight || age < 18 || age > 100) {
+            alert('Пожалуйста, корректно заполните все поля. Возраст должен быть от 18 до 100 лет.');
+            return;
+        }
+
+        updateBMIInline();
+
+        // BMR по формуле Миффлина - Сан Жеора (как указано в МР 2.3.1.0453-21)
+        let bmr;
+        if (gender === 'male') {
+            bmr = (9.99 * weight) + (6.25 * height) - (4.92 * age) + 5;
+        } else {
+            bmr = (9.99 * weight) + (6.25 * height) - (4.92 * age) - 161;
+        }
+
+        const tdee = Math.round(bmr * activity);
+
+        // Доли макронутриентов согласно МР 2.3.1.0453-21
+        let proteinPct = 14; // по умолчанию 14%
+        if (age < 65) {
+            if (activity == 1.6) proteinPct = 13;
+            else if (activity == 1.9) proteinPct = 12.5;
+            else if (activity == 2.2) proteinPct = 12;
+        }
+        const fatPct = 30; // Жиры всегда 30%
+        const carbPct = 100 - proteinPct - fatPct; // Углеводы занимают остаток (56-58%)
+
+        const proteinG = Math.round((tdee * (proteinPct / 100)) / 4);
+        const fatG = Math.round((tdee * (fatPct / 100)) / 9);
+        const carbG = Math.round((tdee * (carbPct / 100)) / 4);
+
+        const vitamins = {};
+        for (const [name, data] of Object.entries(VITAMIN_NORMS)) {
+            vitamins[name] = {
+                norm: gender === 'male' ? data.male : data.female,
+                unit: data.unit
+            };
+        }
+
+        // Корректировка норм для лиц старше 65 лет (Таблицы 12, 16, 17)
+        if (age >= 65) {
+            if (vitamins['Витамин D']) vitamins['Витамин D'].norm = 0.020; // 20 мкг
+            if (vitamins['Кальций']) vitamins['Кальций'].norm = 1200; // 1200 мг
+        }
+
+        userNorms = { tdee, protein: proteinG, fat: fatG, carbs: carbG, proteinPct, fatPct, carbPct, vitamins, gender, activity, age };
+
+        document.getElementById('tab2Btn').disabled = false;
+        switchTab(2);
+    }
+
+    function removeFood(index) {
+        diary.splice(index, 1);
+        renderDiary();
+        renderFoodSelector();
+    }
+
+    function clearDiary() {
+        if (diary.length === 0) return;
+        if (confirm('Очистить весь дневник питания?')) {
+            diary = [];
+            renderDiary();
+            renderFoodSelector();
+        }
+    }
+
+    function getNutrients(food, grams, variant) {
+        const factor = grams / 100;
+        let kcal, fat;
+        if (food.hasPercent) {
+            const v = food.variants[variant] || food.variants[food.defaultVariant];
+            kcal = v.kcal;
+            fat = v.fat;
+        } else {
+            kcal = food.kcal;
+            fat = food.fat;
+        }
+        return {
+            kcal: kcal * factor,
+            protein: food.protein * factor,
+            fat: fat * factor,
+            carbs: food.carbs * factor,
+            vitC: food.vitC * factor,
+            vitB1: food.vitB1 * factor,
+            vitB2: food.vitB2 * factor,
+            vitB6: food.vitB6 * factor,
+            vitB12: food.vitB12 * factor,
+            folate: food.folate * factor,
+            vitA: food.vitA * factor,
+            vitE: food.vitE * factor,
+            vitD: food.vitD * factor,
+            calcium: food.calcium * factor,
+            magnesium: food.magnesium * factor,
+            iron: food.iron * factor,
+            iodine: food.iodine * factor
+        };
+    }
+
+    function getDiaryTotals() {
+        const totals = {
+            kcal: 0, protein: 0, fat: 0, carbs: 0,
+            vitC: 0, vitB1: 0, vitB2: 0, vitB6: 0, vitB12: 0, folate: 0,
+            vitA: 0, vitE: 0, vitD: 0, calcium: 0, magnesium: 0, iron: 0, iodine: 0
+        };
+        diary.forEach(entry => {
+            const n = getNutrients(FOODS[entry.foodIndex], entry.grams, entry.variant);
+            for (let key in totals) totals[key] += n[key];
+        });
+        return totals;
+    }
+
+    function macroCompareHTML(title, factValue, targetValue, unit, pct) {
+        let cls, statusText;
+        if (pct < 80) { cls = 'is-deficit'; statusText = 'Дефицит'; }
+        else if (pct > 120) { cls = 'is-excess'; statusText = 'Избыток'; }
+        else { cls = 'is-ok'; statusText = 'Норма'; }
+
+        return `
+            <div class="macro-compare-item ${cls}">
+                <div class="title">${title}</div>
+                <div class="values">
+                    <span class="fact">${factValue}</span>
+                    <span class="target">из ${targetValue} ${unit}</span>
+                </div>
+                <div class="bar">
+                    <div class="bar-fill" style="width: ${Math.min(100, pct)}%;"></div>
+                </div>
+                <div class="pct-row">
+                    <span class="status">${statusText}</span>
+                    <span>${pct.toFixed(0)}%</span>
+                </div>
+            </div>
+        `;
+    }
+
+    function vitaminCompareHTML(name, factValue, targetValue, unit, pct) {
+        let cls, statusText;
+        if (pct < 80) { cls = 'is-deficit'; statusText = 'Дефицит'; }
+        else if (pct > 120) { cls = 'is-excess'; statusText = 'Избыток'; }
+        else { cls = 'is-ok'; statusText = 'Норма'; }
+
+        return `
+            <div class="vit-compare-item ${cls}">
+                <div class="vit-title">${name}</div>
+                <div class="vit-values">
+                    <span class="vit-fact">${factValue}</span>
+                    <span class="vit-target">/ ${targetValue} ${unit}</span>
+                </div>
+                <div class="vit-bar">
+                    <div class="vit-bar-fill" style="width: ${Math.min(100, pct)}%;"></div>
+                </div>
+                <div class="vit-pct">
+                    <span>${statusText}</span>
+                    <span>${pct.toFixed(0)}%</span>
+                </div>
+            </div>
+        `;
+    }
+
+    function analyzeNutrients(totals) {
+        const deficits = [];
+        const excesses = [];
+
+        const macroChecks = [
+            { name: 'Калории', key: 'kcal', norm: userNorms.tdee },
+            { name: 'Белки', key: 'protein', norm: userNorms.protein },
+            { name: 'Жиры', key: 'fat', norm: userNorms.fat },
+            { name: 'Углеводы', key: 'carbs', norm: userNorms.carbs }
+        ];
+        for (const m of macroChecks) {
+            const pct = (totals[m.key] / m.norm) * 100;
+            if (pct < 80) deficits.push({ name: m.name, pct });
+            if (pct > 120) excesses.push({ name: m.name, pct });
+        }
+
+        const vitaminKeys = {
+            'Витамин C': 'vitC', 'Витамин B1': 'vitB1', 'Витамин B2': 'vitB2',
+            'Витамин B6': 'vitB6', 'Витамин B12': 'vitB12', 'Фолаты (B9)': 'folate',
+            'Витамин A': 'vitA', 'Витамин E': 'vitE', 'Витамин D': 'vitD',
+            'Кальций': 'calcium', 'Магний': 'magnesium', 'Железо': 'iron', 'Йод': 'iodine'
+        };
+        for (const [displayName, key] of Object.entries(vitaminKeys)) {
+            const normObj = userNorms.vitamins[displayName];
+            if (!normObj) continue;
+            const pct = (totals[key] / normObj.norm) * 100;
+            if (pct < 80) deficits.push({ name: displayName, pct });
+            if (pct > 120) excesses.push({ name: displayName, pct });
+        }
+
+        return { deficits, excesses };
+    }
+
+    function getFoodByName(name) {
+        return FOODS.find(f => f.name === name);
+    }
+
+    function buildAddTable(rows) {
+        let html = '<div class="nutrition-table-wrap"><table class="nutrition-table">';
+        html += `<thead><tr>
+            <th>Продукт</th>
+            <th>Восполняет</th>
+            <th>Ккал</th>
+            <th>Белки</th>
+            <th>Жиры</th>
+            <th>Углеводы</th>
+        </tr></thead><tbody>`;
+
+        rows.forEach(r => {
+            const d = getDisplayValues(r.product, r.product.hasPercent ? r.product.defaultVariant : null);
+            html += `<tr>
+                <td class="food-cell">${r.product.name}${r.product.hasPercent ? ' ' + r.product.defaultVariant : ''}</td>
+                <td class="for-cell">${r.forWhat}</td>
+                <td class="num">${d.kcal}</td>
+                <td class="num">${d.protein}</td>
+                <td class="num">${d.fat}</td>
+                <td class="num">${d.carbs}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table></div>';
+        html += '<p class="table-note">* значения указаны на 100 г продукта</p>';
+        return html;
+    }
+
+    function getAddRows(deficits) {
+        const names = deficits.map(d => d.name);
+        const productMap = new Map();
+
+        for (const name of names) {
+            const products = ADD_PRODUCTS_MAP[name];
+            if (!products) continue;
+            for (const productName of products) {
+                const food = getFoodByName(productName);
+                if (!food) continue;
+                if (!productMap.has(productName)) {
+                    productMap.set(productName, { product: food, forWhatSet: new Set() });
+                }
+                productMap.get(productName).forWhatSet.add(name);
+            }
+        }
+
+        const result = [];
+        for (const [, data] of productMap) {
+            result.push({
+                product: data.product,
+                forWhat: Array.from(data.forWhatSet).join(', ')
+            });
+        }
+        return result;
+    }
+
+    function getDefaultAddRows() {
+        return DEFAULT_ADD_PRODUCTS
+            .map(name => getFoodByName(name))
+            .filter(Boolean)
+            .map(food => ({ product: food, forWhat: 'сбалансированный рацион' }));
+    }
+
+    function buildSwapTable(rows) {
+        if (rows.length === 0) return '';
+        let html = '<div class="nutrition-table-wrap"><table class="nutrition-table">';
+        html += `<thead><tr>
+            <th>Вместо</th>
+            <th>Замена</th>
+            <th>Ккал</th>
+            <th>Белки</th>
+            <th>Жиры</th>
+            <th>Углеводы</th>
+        </tr></thead><tbody>`;
+
+        let i = 0;
+        while (i < rows.length) {
+            const currentBad = rows[i].bad;
+            let count = 0;
+            for (let j = i; j < rows.length; j++) {
+                if (rows[j].bad === currentBad) count++;
+                else break;
+            }
+            for (let k = 0; k < count; k++) {
+                const row = rows[i + k];
+                const d = getDisplayValues(row.product, row.product.hasPercent ? row.product.defaultVariant : null);
+                html += '<tr>';
+                if (k === 0) {
+                    html += `<td class="bad-cell" rowspan="${count}">${currentBad}</td>`;
+                }
+                html += `<td class="food-cell">${row.product.name}${row.product.hasPercent ? ' ' + row.product.defaultVariant : ''}</td>
+                    <td class="num">${d.kcal}</td>
+                    <td class="num">${d.protein}</td>
+                    <td class="num">${d.fat}</td>
+                    <td class="num">${d.carbs}</td>
+                </tr>`;
+            }
+            i += count;
+        }
+
+        html += '</tbody></table></div>';
+        html += '<p class="table-note">* значения указаны на 100 г продукта</p>';
+        return html;
+    }
+
+    function getSwapRows(deficits) {
+        const names = deficits.map(d => d.name);
+        const rows = [];
+        for (const name of names) {
+            const swapData = SWAP_MAP[name];
+            if (!swapData) continue;
+            for (const goodName of swapData.good) {
+                const food = getFoodByName(goodName);
+                if (!food) continue;
+                rows.push({ bad: swapData.bad, product: food });
+            }
+        }
+        return rows;
+    }
+
+    function getBMIRecommendations() {
+        const recs = [];
+        if (userBmi === null) return recs;
+        if (userBmi < 18.5) recs.push('У вас дефицит массы тела — рекомендуется увеличить калорийность рациона на 300–500 ккал/сут.');
+        if (userBmi >= 25 && userBmi < 30) recs.push('У вас избыточная масса тела — рекомендуется умеренный дефицит калорий (300–500 ккал/сут) и повышение физической активности.');
+        if (userBmi >= 30) recs.push('У вас ожирение — рекомендуется консультация эндокринолога или нутрициолога и постепенное снижение калорийности рациона.');
+        return recs;
+    }
+
+    function buildRemoveRecommendations(excesses) {
+        const recs = [];
+        const names = excesses.map(e => e.name);
+
+        if (names.includes('Калории')) {
+            recs.push('Контролируйте размер порций и избегайте высококалорийных перекусов.');
+            recs.push('Откажитесь от частого фастфуда и сладких напитков — основных источников «пустых» калорий.');
+        }
+        if (names.includes('Углеводы')) {
+            recs.push('Ограничьте добавленный сахар: сладкие напитки, кондитерские изделия, готовые соусы — не более 25 г сахара в сутки (ВОЗ).');
+        }
+        if (names.includes('Жиры')) {
+            recs.push('Сократите потребление глубоко переработанных мясных продуктов (колбасы, сосиски, бекон) — источников насыщенных жиров.');
+            recs.push('Избегайте трансжиров: маргарин, фастфуд, продукты с частично гидрогенизированными маслами.');
+        }
+        if (names.includes('Железо')) {
+            recs.push('Избыток железа может быть вреден — не принимайте железосодержащие добавки без назначения врача, сократите потребление печени.');
+        }
+        if (names.includes('Витамин A')) {
+            recs.push('Избыток витамина A токсичен — ограничьте потребление печени и продуктов с высоким содержанием ретинола.');
+        }
+        if (names.includes('Йод')) {
+            recs.push('Не превышайте норму йода — избыток может нарушить работу щитовидной железы. Избегайте бесконтрольных добавок.');
+        }
+
+        if (recs.length > 0) {
+            recs.push('Ограничьте соль до 5 г в сутки — избыток способствует повышению артериального давления.');
+        }
+        return recs;
+    }
+
+    function buildAddSection(deficits) {
+        let html = '<div class="rec-section">';
+        html += '<h3>✅ Что добавить в рацион</h3>';
+
+        if (deficits.length > 0) {
+            const rows = getAddRows(deficits);
+            if (rows.length > 0) {
+                html += '<p class="rec-subtitle">Продукты для восполнения выявленных дефицитов:</p>';
+                html += buildAddTable(rows);
+            }
+        } else {
+            html += '<p class="rec-subtitle">Рекомендуемые продукты для сбалансированного рациона:</p>';
+            html += buildAddTable(getDefaultAddRows());
+        }
+
+        const bmiRecs = getBMIRecommendations();
+        if (bmiRecs.length > 0) {
+            bmiRecs.forEach(r => html += `<div class="recommendation rec-add">${r}</div>`);
+        }
+
+        html += '</div>';
+        return html;
+    }
+
+    function buildSwapSection(deficits) {
+        const rows = getSwapRows(deficits);
+        if (rows.length === 0) return '';
+
+        let html = '<div class="rec-section">';
+        html += '<h3>🔄 Чем заменить при дефиците</h3>';
+        html += '<p class="rec-subtitle">Замените менее полезные продукты на более питательные:</p>';
+        html += buildSwapTable(rows);
+        html += '</div>';
+        return html;
+    }
+
+    function buildRemoveSection(excesses) {
+        const recs = buildRemoveRecommendations(excesses);
+        if (recs.length === 0) return '';
+
+        let html = '<div class="rec-section">';
+        html += '<h3>⛔ От чего стоит отказаться или ограничить</h3>';
+        recs.forEach(r => html += `<div class="recommendation rec-remove">${r}</div>`);
+        html += '</div>';
+        return html;
+    }
+
+    function buildCombinedRecommendations(totals) {
+        const { deficits, excesses } = analyzeNutrients(totals);
+        return buildAddSection(deficits) + buildSwapSection(deficits) + buildRemoveSection(excesses);
+    }
+
+    function renderDiary() {
+        const container = document.getElementById('diaryTableContainer');
+        const summaryDiv = document.getElementById('diarySummary');
+        const totalsDiv = document.getElementById('diaryTotals');
+        const vitaminsDiv = document.getElementById('vitaminsCompare');
+        const recsDiv = document.getElementById('combinedRecommendations');
+        const summaryText = document.getElementById('summaryText');
+
+        if (!userNorms) {
+            container.innerHTML = '<p class="empty-message">Сначала рассчитайте персональные нормы на вкладке «Персональные данные».</p>';
+            summaryDiv.style.display = 'none';
+            summaryText.textContent = 'Сначала рассчитайте персональные нормы на первой вкладке.';
+            return;
+        }
+
+        if (diary.length === 0) {
+            container.innerHTML = '<p class="empty-message">Вы пока не добавили ни одного продукта. Вернитесь к выбору продуктов.</p>';
+            summaryDiv.style.display = 'none';
+            summaryText.innerHTML = 'Вы пока не выбрали ни одного продукта. Нажмите «← Вернуться к выбору продуктов», чтобы добавить позиции.';
+            return;
+        }
+
+        const totals = getDiaryTotals();
+        const itemsCount = diary.length;
+        summaryText.innerHTML = `Вы выбрали <b>${itemsCount}</b> ${pluralize(itemsCount, ['продукт', 'продукта', 'продуктов'])}. Ниже — итоги по рациону, сравнение с нормами и рекомендации.`;
+
+        let html = `<table class="diary-table">
+            <thead>
+                <tr>
+                    <th>Продукт</th>
+                    <th>Граммы</th>
+                    <th>Ккал</th>
+                    <th>Белки</th>
+                    <th>Жиры</th>
+                    <th>Углеводы</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        diary.forEach((entry, index) => {
+            const food = FOODS[entry.foodIndex];
+            const n = getNutrients(food, entry.grams, entry.variant);
+            const variantSuffix = entry.variant ? `<span class="variant-suffix">${entry.variant}</span>` : '';
+            const qtyNote = entry.quantity ? `<br><span class="variant-suffix">${entry.quantity} шт</span>` : '';
+            html += `<tr>
+                <td class="product-cell">
+                    <button class="delete-btn" onclick="removeFood(${index})" title="Удалить продукт">✕</button>${food.name}${variantSuffix}
+                </td>
+                <td class="num">${entry.grams} г${qtyNote}</td>
+                <td class="num">${n.kcal.toFixed(0)}</td>
+                <td class="num">${n.protein.toFixed(1)}</td>
+                <td class="num">${n.fat.toFixed(1)}</td>
+                <td class="num">${n.carbs.toFixed(1)}</td>
+            </tr>`;
+        });
+
+        html += `<tr class="totals-row">
+            <td class="product-cell">Итого</td>
+            <td class="num">—</td>
+            <td class="num">${totals.kcal.toFixed(0)}</td>
+            <td class="num">${totals.protein.toFixed(1)}</td>
+            <td class="num">${totals.fat.toFixed(1)}</td>
+            <td class="num">${totals.carbs.toFixed(1)}</td>
+        </tr>`;
+
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+        summaryDiv.style.display = 'block';
+
+        totalsDiv.innerHTML = `
+            <div class="macro-compare-row">
+                ${macroCompareHTML('Калории', totals.kcal.toFixed(0), userNorms.tdee, 'ккал', (totals.kcal / userNorms.tdee) * 100)}
+                ${macroCompareHTML('Белки', totals.protein.toFixed(1), userNorms.protein, 'г', (totals.protein / userNorms.protein) * 100)}
+                ${macroCompareHTML('Жиры', totals.fat.toFixed(1), userNorms.fat, 'г', (totals.fat / userNorms.fat) * 100)}
+                ${macroCompareHTML('Углеводы', totals.carbs.toFixed(1), userNorms.carbs, 'г', (totals.carbs / userNorms.carbs) * 100)}
+            </div>
+        `;
+
+        const vitaminKeys = {
+            'Витамин C': 'vitC', 'Витамин B1': 'vitB1', 'Витамин B2': 'vitB2',
+            'Витамин B6': 'vitB6', 'Витамин B12': 'vitB12', 'Фолаты (B9)': 'folate',
+            'Витамин A': 'vitA', 'Витамин E': 'vitE', 'Витамин D': 'vitD',
+            'Кальций': 'calcium', 'Магний': 'magnesium', 'Железо': 'iron', 'Йод': 'iodine'
+        };
+
+        let vitaminsHtml = '';
+        for (const [displayName, key] of Object.entries(vitaminKeys)) {
+            const normObj = userNorms.vitamins[displayName];
+            if (!normObj) continue;
+            const consumed = totals[key];
+            const pct = (consumed / normObj.norm) * 100;
+            const factStr = consumed < 1 ? consumed.toFixed(3) : consumed.toFixed(0);
+            const targetStr = normObj.norm < 1 ? normObj.norm.toFixed(3) : normObj.norm.toFixed(0);
+            vitaminsHtml += vitaminCompareHTML(displayName, factStr, targetStr, normObj.unit, pct);
+        }
+        vitaminsDiv.innerHTML = vitaminsHtml;
+
+        recsDiv.innerHTML = buildCombinedRecommendations(totals);
+    }
+
+    function pluralize(n, forms) {
+        const mod10 = n % 10;
+        const mod100 = n % 100;
+        if (mod10 === 1 && mod100 !== 11) return forms[0];
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return forms[1];
+        return forms[2];
+    }
+
+    window.onload = function() {
+        renderFoodSelector();
+        document.getElementById('height').addEventListener('input', updateBMIInline);
+        document.getElementById('weight').addEventListener('input', updateBMIInline);
+        updateBMIInline();
+    };
+</script>
+</body>
+</html>
