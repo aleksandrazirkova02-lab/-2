@@ -1314,46 +1314,80 @@
         <button class="tab-btn" id="tab3Btn" onclick="switchTab(3)" disabled>3. Ваш дневник</button>
     </div>
 
-    <div id="tab1" class="tab-content active">
-        <div class="grid">
-            <div class="field">
-                <label for="gender">Пол</label>
-                <select id="gender">
-                    <option value="male">Мужчина</option>
-                    <option value="female">Женщина</option>
-                </select>
+       <div id="tab1" class="tab-content active">
+        <div class="personal-data-layout">
+            <!-- ЛЕВАЯ КОЛОНКА: Ввод данных и ИМТ -->
+            <div class="left-column">
+                <div class="grid" style="grid-template-columns: 1fr; gap: 15px;">
+                    <div class="field">
+                        <label for="gender">Пол</label>
+                        <select id="gender">
+                            <option value="male">Мужчина</option>
+                            <option value="female">Женщина</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="age">Возраст (лет)</label>
+                        <input type="number" id="age" min="18" max="100" value="30">
+                    </div>
+                    <div class="field">
+                        <label for="height">Рост (см)</label>
+                        <input type="number" id="height" min="140" max="220" value="175">
+                    </div>
+                    <div class="field">
+                        <label for="weight">Вес (кг)</label>
+                        <input type="number" id="weight" min="40" max="180" value="70">
+                    </div>
+                    <div class="field">
+                        <label for="activity">Уровень физической активности (КФА)</label>
+                        <select id="activity">
+                            <option value="1.4">Минимальный (КФА 1.4) — сидячий образ жизни</option>
+                            <option value="1.6" selected>Низкий (КФА 1.6) — легкий труд</option>
+                            <option value="1.9">Средний (КФА 1.9) — труд средней тяжести</option>
+                            <option value="2.2">Высокий (КФА 2.2) — тяжелый физический труд</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bmi-inline-card" id="bmiInlineCard" style="margin-top: 15px;">
+                    <h2>⚖️ Индекс массы тела (ИМТ)</h2>
+                    <p class="bmi-placeholder">Введите данные, чтобы увидеть ИМТ.</p>
+                </div>
+
+                <button class="btn" onclick="calculate()" style="margin-top: 15px;">Рассчитать и перейти к выбору продуктов</button>
             </div>
-            <div class="field">
-                <label for="age">Возраст (лет)</label>
-                <input type="number" id="age" min="18" max="100" value="30">
-            </div>
-            <div class="field">
-                <label for="height">Рост (см)</label>
-                <input type="number" id="height" min="140" max="220" value="175">
-            </div>
-            <div class="field">
-                <label for="weight">Вес (кг)</label>
-                <input type="number" id="weight" min="40" max="180" value="70">
-            </div>
-            <div class="field" style="grid-column: 1 / -1;">
-                <label for="activity">Уровень физической активности (КФА)</label>
-                <select id="activity">
-                    <option value="1.4">Минимальный (КФА 1.4) — работники преимущественно умственного труда (сидячий образ жизни)</option>
-                    <option value="1.6" selected>Низкий (КФА 1.6) — работники, занятые легким трудом</option>
-                    <option value="1.9">Средний (КФА 1.9) — работники средней тяжести труда</option>
-                    <option value="2.2">Высокий (КФА 2.2) — работники тяжелого физического труда</option>
-                </select>
+
+            <!-- ПРАВАЯ КОЛОНКА: Таблица КБЖУ -->
+            <div class="right-column">
+                <div class="result-card" style="margin-bottom: 0; height: 100%;">
+                    <h2>📊 Ваша суточная норма КБЖУ</h2>
+                    <table class="preview-table">
+                        <tbody>
+                            <tr>
+                                <td>Калории</td>
+                                <td id="preview-kcal">—</td>
+                            </tr>
+                            <tr>
+                                <td>Белки</td>
+                                <td id="preview-protein">—</td>
+                            </tr>
+                            <tr>
+                                <td>Жиры</td>
+                                <td id="preview-fat">—</td>
+                            </tr>
+                            <tr>
+                                <td>Углеводы</td>
+                                <td id="preview-carbs">—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p style="font-size: 0.8rem; color: var(--muted); margin-top: 20px; line-height: 1.4;">
+                        * Расчёт основан на формуле Миффлина-Сан Жеора и вашем уровне активности. Распределение БЖУ: 30% / 30% / 40%.
+                    </p>
+                </div>
             </div>
         </div>
-
-        <div class="bmi-inline-card" id="bmiInlineCard">
-            <h2>⚖️ Индекс массы тела (ИМТ)</h2>
-            <p class="bmi-placeholder">Введите корректные рост (140–220 см) и вес (40–180 кг), чтобы увидеть ИМТ.</p>
-        </div>
-
-        <button class="btn" onclick="calculate()">Рассчитать и перейти к выбору продуктов</button>
     </div>
-
     <div id="tab2" class="tab-content">
         <p style="margin-bottom: 18px; color: var(--muted); font-size: 0.92rem;">
             Нажмите круглую кнопку «+» у продукта — он добавится в дневник. Для «Готовых блюд» доступны подкатегории
